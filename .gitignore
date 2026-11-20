@@ -25,3 +25,5 @@ GoogleService-Info.plist
 *.key
 /scripts/crearAdminsEntidades.js
 npm-debug.log*
+
+.idea/
