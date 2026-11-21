@@ -15,20 +15,28 @@ export default function RootNavigator() {
 
   useEffect(() => {
     let stopProfile = () => {};
+    let sessionVersion = 0;
     const stopAuth = onAuthStateChanged(auth, (currentUser) => {
+      const version = ++sessionVersion;
       stopProfile();
+      stopProfile = () => {};
       setUser(currentUser);
       setProfile(currentUser ? undefined : null);
       if (currentUser) {
         stopProfile = onSnapshot(
           doc(db, 'usuarios', currentUser.uid),
-          (snapshot) => setProfile(snapshot.exists() ? snapshot.data() : null),
-          () => setProfile(null),
+          (snapshot) => {
+            if (version === sessionVersion) setProfile(snapshot.exists() ? snapshot.data() : null);
+          },
+          () => {
+            if (version === sessionVersion) setProfile(null);
+          },
         );
       }
     });
 
     return () => {
+      sessionVersion++;
       stopProfile();
       stopAuth();
     };

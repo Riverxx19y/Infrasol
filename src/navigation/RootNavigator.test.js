@@ -16,6 +16,8 @@ jest.mock('../screens/StartScreen', () => 'StartScreen');
 
 global.IS_REACT_ACT_ENVIRONMENT = true;
 
+beforeEach(() => jest.clearAllMocks());
+
 test('navega entre registro, verificación y pantalla inicial según el perfil', () => {
   onAuthStateChanged.mockReturnValue(() => {});
   onSnapshot.mockReturnValue(() => {});
@@ -36,4 +38,39 @@ test('navega entre registro, verificación y pantalla inicial según el perfil',
 
   act(() => { profileChanged({ exists: () => true, data: () => ({ emailVerificado: true }) }); });
   expect(tree.root.findAllByType('StartScreen')).toHaveLength(1);
+});
+
+test('ignora respuestas tardías del perfil anterior al cambiar de sesión', () => {
+  onAuthStateChanged.mockReturnValue(() => {});
+  const stopFirstProfile = jest.fn();
+  onSnapshot.mockReturnValueOnce(stopFirstProfile).mockReturnValueOnce(() => {});
+  let tree;
+  act(() => { tree = create(<RootNavigator />); });
+
+  const authChanged = onAuthStateChanged.mock.calls.at(-1)[1];
+  act(() => { authChanged({ uid: 'u1', email: 'primero@example.test' }); });
+  const firstProfileChanged = onSnapshot.mock.calls.at(-1)[1];
+  const firstProfileError = onSnapshot.mock.calls.at(-1)[2];
+
+  act(() => { authChanged({ uid: 'u2', email: 'segundo@example.test' }); });
+  expect(stopFirstProfile).toHaveBeenCalledTimes(1);
+  expect(tree.root.findAllByType('StartScreen')).toHaveLength(0);
+
+  act(() => {
+    firstProfileChanged({ exists: () => true, data: () => ({ emailVerificado: true }) });
+    firstProfileError(new Error('respuesta tardía'));
+  });
+  expect(tree.root.findAllByType('StartScreen')).toHaveLength(0);
+
+  const secondProfileChanged = onSnapshot.mock.calls.at(-1)[1];
+  act(() => { secondProfileChanged({ exists: () => true, data: () => ({ emailVerificado: 'true' }) }); });
+  expect(tree.root.findAllByType('StartScreen')).toHaveLength(0);
+  act(() => { secondProfileChanged({ exists: () => true, data: () => ({ emailVerificado: false }) }); });
+  expect(tree.root.findByType('VerificationScreen').props.user.uid).toBe('u2');
+
+  act(() => { firstProfileChanged({ exists: () => true, data: () => ({ emailVerificado: true }) }); });
+  expect(tree.root.findByType('VerificationScreen').props.user.uid).toBe('u2');
+  expect(tree.root.findAllByType('StartScreen')).toHaveLength(0);
+
+  act(() => { tree.unmount(); });
 });

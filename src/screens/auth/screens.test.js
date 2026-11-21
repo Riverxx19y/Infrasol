@@ -13,10 +13,53 @@ jest.mock('../../services/registration.service', () => ({
 
 global.IS_REACT_ACT_ENVIRONMENT = true;
 
+beforeEach(() => jest.clearAllMocks());
+
 function pressButton(tree, label) {
   return tree.root.findAllByType(TouchableOpacity)
     .find((button) => button.props.accessibilityLabel === label).props.onPress();
 }
+
+test('el registro envía los datos al servicio y comunica la cuenta creada', async () => {
+  const user = { uid: 'u1', email: 'persona@example.test' };
+  const gateway = { solicitarCodigo: jest.fn() };
+  const onRegistered = jest.fn();
+  registrarCiudadano.mockResolvedValue(user);
+  let tree;
+  act(() => { tree = create(<RegisterScreen otpGateway={gateway} onRegistered={onRegistered} />); });
+
+  act(() => {
+    const inputs = tree.root.findAllByType(TextInput);
+    inputs.find((input) => input.props.accessibilityLabel === 'Nombre completo').props.onChangeText('Ana Pérez');
+    inputs.find((input) => input.props.accessibilityLabel === 'Correo electrónico').props.onChangeText(user.email);
+    inputs.find((input) => input.props.accessibilityLabel === 'Contraseña').props.onChangeText('seis-digitos');
+  });
+  await act(async () => { await pressButton(tree, 'Crear cuenta'); });
+
+  expect(registrarCiudadano).toHaveBeenCalledWith(
+    { nombre: 'Ana Pérez', email: user.email, password: 'seis-digitos' }, gateway,
+  );
+  expect(onRegistered).toHaveBeenCalledWith(user);
+  act(() => { tree.unmount(); });
+});
+
+test('la verificación envía los seis dígitos al servicio sin presentar error', async () => {
+  const gateway = { verificarCodigo: jest.fn() };
+  verificarCodigo.mockResolvedValue({ verificado: true });
+  let tree;
+  act(() => { tree = create(<VerificationScreen user={{ uid: 'u1', email: 'persona@example.test' }} otpGateway={gateway} />); });
+
+  act(() => {
+    for (const [index, input] of tree.root.findAllByType(TextInput).entries()) {
+      input.props.onChangeText(String(index + 1));
+    }
+  });
+  await act(async () => { await pressButton(tree, 'Verificar código'); });
+
+  expect(verificarCodigo).toHaveBeenCalledWith('u1', '123456', gateway);
+  expect(tree.root.findAllByProps({ accessibilityRole: 'alert' })).toHaveLength(0);
+  act(() => { tree.unmount(); });
+});
 
 test('el formulario presenta el error del servicio y no avanza a verificación', async () => {
   registrarCiudadano.mockRejectedValue(new Error('El servicio de verificación de correo aún no está configurado.'));
