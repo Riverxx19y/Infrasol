@@ -36,7 +36,7 @@ test('navega entre registro, verificación y pantalla inicial según el perfil',
   expect(tree.root.findByType('VerificationScreen').props.otpGateway.verificarCodigo).toEqual(expect.any(Function));
   expect(tree.root.findAllByType('StartScreen')).toHaveLength(0);
 
-  act(() => { profileChanged({ exists: () => true, data: () => ({ emailVerificado: true }) }); });
+  act(() => { profileChanged({ exists: () => true, data: () => ({ rol: 'ciudadano', emailVerificado: true }) }); });
   expect(tree.root.findAllByType('StartScreen')).toHaveLength(1);
 });
 

@@ -8,6 +8,7 @@ import { otpGateway } from '../services/otp.gateway';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
 import VerificationScreen from '../screens/auth/VerificationScreen';
+import RestrictedAccessScreen from '../screens/auth/RestrictedAccessScreen';
 import StartScreen from '../screens/StartScreen';
 import AdminScreen from '../screens/admin/AdminScreen';
 
@@ -62,5 +63,6 @@ export default function RootNavigator() {
     return <VerificationScreen user={user} otpGateway={otpGateway} onUseAnotherAccount={handleSignOut} />;
   }
   if (profile?.rol === 'administrador') return <AdminScreen onSignOut={handleSignOut} />;
-  return <StartScreen onSignOut={handleSignOut} />;
+  if (profile?.rol === 'ciudadano') return <StartScreen onSignOut={handleSignOut} />;
+  return <RestrictedAccessScreen onSignOut={handleSignOut} />;
 }
