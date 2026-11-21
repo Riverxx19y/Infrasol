@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { registrarCiudadano } from '../../services/registration.service';
+import AuthHeader from './AuthHeader';
 import { colors, styles } from './styles';
 
 export default function RegisterScreen({ otpGateway, onRegistered, onLogin }) {
@@ -27,13 +28,7 @@ export default function RegisterScreen({ otpGateway, onRegistered, onLogin }) {
   return (
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <View style={styles.header}>
-          <View style={styles.logoWrap}>
-            <Image source={require('../../../assets/icono infrasol.png')} style={styles.logo} resizeMode="cover" />
-          </View>
-          <Text style={styles.logoText}>INFRASOL</Text>
-          <Text style={styles.logoSub}>Infraestructura · Soluciones</Text>
-        </View>
+        <AuthHeader />
         <View style={styles.card}>
           <Text accessibilityRole="header" style={styles.title}>Crear cuenta</Text>
           <Text style={styles.subtitle}>Únete a la comunidad INFRASOL</Text>

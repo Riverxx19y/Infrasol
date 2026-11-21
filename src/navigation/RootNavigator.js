@@ -55,9 +55,8 @@ export default function RootNavigator() {
   }
 
   if (!user) {
-    return authMode === 'login'
-      ? <LoginScreen onRegister={() => setAuthMode('register')} />
-      : <RegisterScreen otpGateway={otpGateway} onLogin={() => setAuthMode('login')} />;
+    if (authMode === 'login') return <LoginScreen onRegister={() => setAuthMode('register')} />;
+    return <RegisterScreen otpGateway={otpGateway} onLogin={() => setAuthMode('login')} />;
   }
   if (!puedeAcceder(user, profile)) {
     return <VerificationScreen user={user} otpGateway={otpGateway} onUseAnotherAccount={handleSignOut} />;

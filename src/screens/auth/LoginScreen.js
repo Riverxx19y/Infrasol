@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { iniciarSesion } from '../../services/auth.service';
+import { validarCredenciales } from '../../services/auth.validation';
+import AuthHeader from './AuthHeader';
 import { colors, styles } from './styles';
 
 const authErrors = {
@@ -20,13 +22,11 @@ export default function LoginScreen({ onLogin, onRegister }) {
 
   async function handleLogin() {
     if (loading) return;
-    const cleanEmail = email.trim();
-    if (!cleanEmail || !password.trim()) {
-      setError('Completa el correo y la contraseña.');
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
-      setError('Ingresa un correo electrónico válido.');
+    let cleanEmail;
+    try {
+      cleanEmail = validarCredenciales(email, password);
+    } catch (cause) {
+      setError(cause.message);
       return;
     }
     setLoading(true);
@@ -44,13 +44,7 @@ export default function LoginScreen({ onLogin, onRegister }) {
   return (
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <View style={styles.header}>
-          <View style={styles.logoWrap}>
-            <Image source={require('../../../assets/icono infrasol.png')} style={styles.logo} resizeMode="cover" />
-          </View>
-          <Text style={styles.logoText}>INFRASOL</Text>
-          <Text style={styles.logoSub}>Infraestructura · Soluciones</Text>
-        </View>
+        <AuthHeader />
         <View style={styles.card}>
           <Text accessibilityRole="header" style={styles.title}>Iniciar sesión</Text>
           <Text style={styles.subtitle}>Bienvenido de nuevo</Text>
