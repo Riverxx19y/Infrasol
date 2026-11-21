@@ -3,8 +3,10 @@ import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, Te
 import { reenviarCodigo, verificarCodigo } from '../../services/registration.service';
 import { colors, styles } from './styles';
 
+const emptyDigits = () => Array(6).fill('');
+
 export default function VerificationScreen({ user, otpGateway, onUseAnotherAccount }) {
-  const [digits, setDigits] = useState(['', '', '', '', '', '']);
+  const [digits, setDigits] = useState(emptyDigits);
   const [loading, setLoading] = useState(false);
   const [cooldownUntil, setCooldownUntil] = useState(0);
   const [error, setError] = useState('');
@@ -15,6 +17,11 @@ export default function VerificationScreen({ user, otpGateway, onUseAnotherAccou
     return () => clearTimeout(timer);
   }, [cooldownUntil]);
 
+  function updateDigit(index, text) {
+    const digit = text.replace(/\D/g, '').slice(-1);
+    setDigits((current) => current.map((value, position) => position === index ? digit : value));
+  }
+
   async function handleVerify() {
     if (loading) return;
     setLoading(true);
@@ -24,7 +31,7 @@ export default function VerificationScreen({ user, otpGateway, onUseAnotherAccou
       // La navegación depende del perfil actualizado por el módulo OTP.
     } catch (cause) {
       setError(cause.message || 'No se pudo verificar el código.');
-      setDigits(['', '', '', '', '', '']);
+      setDigits(emptyDigits());
     } finally {
       setLoading(false);
     }
@@ -36,7 +43,7 @@ export default function VerificationScreen({ user, otpGateway, onUseAnotherAccou
     setError('');
     try {
       await reenviarCodigo(user.uid, otpGateway);
-      setDigits(['', '', '', '', '', '']);
+      setDigits(emptyDigits());
       setCooldownUntil(Date.now() + 60_000);
     } catch (cause) {
       setError(cause.message || 'No se pudo reenviar el código.');
@@ -44,6 +51,8 @@ export default function VerificationScreen({ user, otpGateway, onUseAnotherAccou
       setLoading(false);
     }
   }
+
+  const resendCoolingDown = Date.now() < cooldownUntil;
 
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.background }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -62,7 +71,7 @@ export default function VerificationScreen({ user, otpGateway, onUseAnotherAccou
                 accessibilityLabel={`Dígito ${index + 1}`}
                 style={[styles.digit, digit && styles.digitFilled]}
                 value={digit}
-                onChangeText={(text) => setDigits((current) => current.map((value, position) => position === index ? text.replace(/\D/g, '').slice(-1) : value))}
+                onChangeText={(text) => updateDigit(index, text)}
                 keyboardType="number-pad"
                 maxLength={1}
                 selectTextOnFocus
@@ -73,8 +82,8 @@ export default function VerificationScreen({ user, otpGateway, onUseAnotherAccou
           <TouchableOpacity accessibilityRole="button" accessibilityLabel="Verificar código" style={styles.primaryButton} onPress={handleVerify} disabled={loading}>
             {loading ? <ActivityIndicator color={colors.surface} /> : <Text style={styles.primaryText}>Verificar código</Text>}
           </TouchableOpacity>
-          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Reenviar código" style={styles.secondaryButton} onPress={handleResend} disabled={loading || Date.now() < cooldownUntil}>
-            <Text style={styles.secondaryText}>{Date.now() < cooldownUntil ? 'Código enviado (espera 1 min)' : 'Reenviar código'}</Text>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Reenviar código" style={styles.secondaryButton} onPress={handleResend} disabled={loading || resendCoolingDown}>
+            <Text style={styles.secondaryText}>{resendCoolingDown ? 'Código enviado (espera 1 min)' : 'Reenviar código'}</Text>
           </TouchableOpacity>
           <Text style={styles.hint}>El código expira en 15 minutos. Dispones de 5 intentos.</Text>
           <TouchableOpacity accessibilityRole="button" accessibilityLabel="Usar otra cuenta" onPress={onUseAnotherAccount} style={styles.secondaryButton}>
