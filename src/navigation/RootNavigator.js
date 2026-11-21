@@ -6,12 +6,21 @@ import { auth, db } from '../../config/firebase';
 import { puedeAcceder } from '../services/registration.service';
 import { otpGateway } from '../services/otp.gateway';
 import RegisterScreen from '../screens/auth/RegisterScreen';
+import LoginScreen from '../screens/auth/LoginScreen';
 import VerificationScreen from '../screens/auth/VerificationScreen';
+import RestrictedAccessScreen from '../screens/auth/RestrictedAccessScreen';
 import StartScreen from '../screens/StartScreen';
+import AdminScreen from '../screens/admin/AdminScreen';
 
 export default function RootNavigator() {
   const [user, setUser] = useState(undefined);
   const [profile, setProfile] = useState(undefined);
+  const [authMode, setAuthMode] = useState('register');
+
+  async function handleSignOut() {
+    await signOut(auth);
+    setAuthMode('login');
+  }
 
   useEffect(() => {
     let stopProfile = () => {};
@@ -46,9 +55,14 @@ export default function RootNavigator() {
     return <View style={{ flex: 1, justifyContent: 'center' }}><ActivityIndicator size="large" color="#0057FF" /></View>;
   }
 
-  if (!user) return <RegisterScreen otpGateway={otpGateway} />;
-  if (!puedeAcceder(user, profile)) {
-    return <VerificationScreen user={user} otpGateway={otpGateway} onUseAnotherAccount={() => signOut(auth)} />;
+  if (!user) {
+    if (authMode === 'login') return <LoginScreen onRegister={() => setAuthMode('register')} />;
+    return <RegisterScreen otpGateway={otpGateway} onLogin={() => setAuthMode('login')} />;
   }
-  return <StartScreen />;
+  if (!puedeAcceder(user, profile)) {
+    return <VerificationScreen user={user} otpGateway={otpGateway} onUseAnotherAccount={handleSignOut} />;
+  }
+  if (profile?.rol === 'administrador') return <AdminScreen onSignOut={handleSignOut} />;
+  if (profile?.rol === 'ciudadano') return <StartScreen onSignOut={handleSignOut} />;
+  return <RestrictedAccessScreen onSignOut={handleSignOut} />;
 }

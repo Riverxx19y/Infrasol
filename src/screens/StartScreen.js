@@ -1,11 +1,14 @@
-import { StatusBar, StyleSheet, Text, View } from 'react-native';
+import { StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-export default function StartScreen() {
+export default function StartScreen({ onSignOut }) {
   return (
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" />
       <Text accessibilityRole="header" style={styles.title}>INFRASOL</Text>
       <Text style={styles.message}>Sprint 0 · Expo SDK 54 en marcha</Text>
+      <TouchableOpacity accessibilityRole="button" accessibilityLabel="Cerrar sesión" onPress={onSignOut} style={styles.signOutButton}>
+        <Text style={styles.signOutText}>Cerrar sesión</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -30,4 +33,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
   },
+  signOutButton: { marginTop: 24, padding: 12 },
+  signOutText: { color: '#0057FF', fontWeight: '700' },
 });
