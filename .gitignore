@@ -2,6 +2,10 @@ node_modules/
 .expo/
 dist/
 coverage/
+.firebase/
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
 
 .env
 .env.local

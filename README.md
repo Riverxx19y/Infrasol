@@ -1,6 +1,6 @@
 # INFRASOL · Base técnica
 
-Base móvil de Expo SDK 54 para Android e iOS. Al abrirla aparece **INFRASOL** y el mensaje **Sprint 0 · Expo SDK 54 en marcha**. Sprint 1 añade la inicialización de Firebase Authentication y Firestore mediante variables públicas de entorno, sin agregar todavía pantallas de autenticación.
+Base móvil de Expo SDK 54 para Android e iOS. Sprint 1 incluye registro ciudadano y verificación de correo mediante la API independiente `INFRASOL-BACKEND`.
 
 ## Probar la aplicación
 
@@ -10,7 +10,7 @@ Desde `INFRASOL-SCRUM-NUEVO`, con Node.js 20.19.4 o posterior, npm y Expo Go com
 npm ci
 ```
 
-Antes del primer arranque, crea el entorno local y completa únicamente los valores públicos del proyecto Firebase:
+Antes del primer arranque, crea el entorno local y completa las variables públicas de Firebase y `EXPO_PUBLIC_API_URL`:
 
 ```powershell
 Copy-Item .env.example .env
@@ -27,29 +27,25 @@ En la verificación de la base de Sprint 1, Expo validó las dependencias y Metr
 | --- | --- |
 | `package.json` y `package-lock.json` | Comandos, versiones directas y resolución reproducible. |
 | `app.json` | Nombre, identificador de Expo, versión y plataformas. |
-| `index.js` | Punto de entrada que registra `App` con `registerRootComponent`, como en la referencia. |
+| `index.js` | Punto de entrada que registra `App` con `registerRootComponent`. |
 | `App.js` | Raíz de la aplicación. |
-| `src/navigation/RootNavigator.js` | Punto donde se añadirán rutas. Por ahora monta una sola pantalla. |
+| `src/navigation/RootNavigator.js` | Selección de registro, verificación o pantalla inicial según la sesión y `emailVerificado`. |
 | `src/screens/StartScreen.js` | Pantalla de comprobación independiente, con componentes de React Native. |
 | `config/firebase.js` | Validación del entorno e inicialización de Authentication con persistencia y Firestore. |
 | `.env.example` | Nombres de las variables públicas requeridas, sin valores del proyecto. |
 | `.gitignore` | Exclusiones para archivos generados, datos de entorno y archivos sensibles. |
-| `README.md` | Arranque y trazabilidad de integración. |
+| `README.md` | Arranque, configuración y límites técnicos. |
 
-Dependencias directas: `expo` `54.0.35`, `react` `19.1.0`, `react-native` `0.81.5`, `firebase` `11.10.0` y `@react-native-async-storage/async-storage` `2.2.0`. Las versiones coinciden con las fijadas en la referencia. La ruta única prescinde de una biblioteca de navegación. Expo aporta la configuración predeterminada de Metro y Babel. El soporte web queda pendiente de una historia que lo requiera.
+Dependencias directas: Expo SDK 54, Firebase 11.10.0 y AsyncStorage 2.2.0. La navegación actual selecciona una de tres pantallas sin instalar una biblioteca adicional. Las historias posteriores incorporarán sus propias funcionalidades.
 
-## Integración por historia
+## HU-01 · Configuración OTP
 
-La referencia usa el mismo punto de entrada, pero su `App.js` monta los proveedores de autenticación y tema. Sus navegadores registran pantallas públicas, privadas y administrativas, y su `SplashScreen.js` depende del tema. La base adopta la estructura de entrada y mantiene `src/navigation` como punto de integración. Los siguientes archivos de `INFRASOL-SCRUM` son candidatos a reutilización por historia, según el [Sprint Backlog ajustado](../Scrum/INFRASOL_Sprint_Backlogs_Ajustados.xlsx).
+`registration.service.js` crea la cuenta en Firebase Authentication y el perfil `usuarios/{uid}` con `emailVerificado: false`. `RootNavigator` conecta las pantallas con `otp.gateway.js`, que obtiene el ID token vigente y llama a `POST /api/otp/solicitar`, `/verificar` y `/reenviar`. El backend genera, almacena, envía y verifica el código; el cliente solo presenta el formulario y el resultado. La navegación permanece en verificación hasta que Firestore indique `emailVerificado: true`.
 
-| Sprint | Historia | Código de referencia a evaluar |
-| --- | --- | --- |
-| 1 | HU-01 y HU-02 · Registro, verificación e inicio de sesión | La base de Firebase ya está configurada. Quedan pendientes `src/screens/auth/`, `src/contexts/AuthContext.js`, `src/hooks/useAuth.js` y las operaciones aplicables de `src/services/auth.service.js`. EmailJS todavía no se integra. |
-| 2 | HU-03 · Crear reporte con ubicación y foto | `src/screens/reports/ReportScreen.js`, `ReportSuccessScreen.js` y las operaciones de creación de `src/services/reports.service.js`. |
-| 3 | HU-04 · Mapa, HU-05 · Apoyo y duplicados, HU-07 · Historial | `src/screens/map/MapScreen.js`, `src/components/map/`, `MapaComponent.js`, `src/utils/geo.js`, `src/screens/home/HomeScreen.js`, `src/components/reports/ReportCard.js` y las operaciones correspondientes de `reports.service.js`. |
-| 4 | HU-09 · Cambio de estado, HU-08 · Panel y estadísticas, HU-06 · Notificaciones | `src/screens/admin/AdminScreen.js`, `EstadisticasScreen.js`, `src/screens/notifications/NotificationsScreen.js` y las operaciones de estado y notificaciones en `reports.service.js`. |
-| 5 | HU-11 · Recuperación de contraseña, HU-10 · Modo oscuro | Flujo de recuperación de `LoginScreen.js` y `auth.service.js`, `src/contexts/ThemeContext.js`, `src/constants/theme.js` y el selector de `src/screens/profile/ProfileScreen.js`. |
+`EXPO_PUBLIC_API_URL` contiene solo la dirección base de la API. La dirección `192.0.2.10` de `.env.example` es ilustrativa y debe reemplazarse en el `.env` local. Para un teléfono físico en la misma red, usa `http://<IP-LAN-del-equipo>:3000` (o el `PORT` configurado en Express); `localhost` en el teléfono apunta al propio teléfono. El backend debe escuchar en una interfaz accesible, como `HOST=0.0.0.0`, y el teléfono debe poder alcanzar ese puerto. Inicia primero el backend y luego reinicia Expo para que lea el `.env`. Para un backend desplegado, configura la URL pública HTTPS en el entorno de compilación de Expo. La configuración de Firebase Admin y la clave privada de EmailJS permanecen exclusivamente en el entorno del backend.
 
-Integra solo las funciones y dependencias que exige cada historia. Los servicios de autenticación y reportes agrupan operaciones de varios sprints, así que su reutilización requiere revisar cada operación y sus criterios de aceptación. Chat, exportación, moderación y otras funciones de la referencia quedan pendientes de una historia aplicable. Jest, CI y Firestore Emulator corresponden a las tareas de preparación técnica transversal del backlog y quedan pendientes.
+Si Firebase crea la cuenta y falla el envío, la sesión queda pendiente y la pantalla de verificación permite **Reenviar código** sin registrar otra cuenta. La sesión persiste al cerrar y reabrir la aplicación. Si el usuario cierra sesión, HU-02 deberá aportar el inicio de sesión para recuperar esa cuenta. Un error de conexión o una respuesta HTTP fallida se muestra en pantalla; no se anuncia un correo enviado sin confirmación de la API.
 
-Los valores públicos de la referencia se guardan únicamente en el `.env` local ignorado. Los archivos originales `firebaseConfig.js`, `config/firebase.js`, `config/admin.js`, `eas.json`, las configuraciones locales y `scripts/crearAdminsEntidades.js` permanecen en la referencia. Las credenciales administrativas deben mantenerse fuera del código cliente.
+`firestore.rules` permite al ciudadano crear y leer su perfil no verificado, pero impide cualquier actualización o eliminación del perfil desde el cliente, incluidos cambios de `emailVerificado`, UID o rol. También bloquea el acceso cliente a los retos OTP. Los cambios futuros del perfil requerirán ampliar las reglas de forma controlada, limitando campos y valores permitidos. Son reglas completas para esta base mínima: antes de aplicarlas a un proyecto compartido deben integrarse con sus reglas actuales. No se han desplegado reglas ni servicios.
+
+Ejecuta `npm run test:ci` para las pruebas del cliente, `npm run test:rules` para las reglas en el emulador local (requiere Firebase CLI) y `npx expo export --platform android --platform ios` para comprobar los bundles. Las pruebas del backend y su configuración están documentadas en el directorio hermano `INFRASOL-BACKEND`.

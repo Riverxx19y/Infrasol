@@ -1,0 +1,29 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /usuarios/{userId} {
+      allow get: if request.auth != null && request.auth.uid == userId;
+      allow list: if false;
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.auth.token.email == request.resource.data.email
+        && request.resource.data.keys().hasOnly(['uid', 'nombre', 'email', 'rol', 'emailVerificado'])
+        && request.resource.data.keys().hasAll(['uid', 'nombre', 'email', 'rol', 'emailVerificado'])
+        && request.resource.data.uid == userId
+        && request.resource.data.nombre is string
+        && request.resource.data.nombre.size() > 0
+        && request.resource.data.rol == 'ciudadano'
+        && request.resource.data.emailVerificado == false;
+      allow update, delete: if false;
+    }
+    match /verificaciones/{userId} {
+      allow read, write: if false;
+    }
+    match /otpVerificaciones/{userId} {
+      allow read, write: if false;
+    }
+    match /otpRateLimits/{limitId} {
+      allow read, write: if false;
+    }
+  }
+}
