@@ -1,8 +1,8 @@
 import React from 'react';
 import { act, create } from 'react-test-renderer';
-import { Text, TextInput, TouchableOpacity } from 'react-native';
+import { Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-jest.mock('../../services/auth.service', () => ({ iniciarSesion: jest.fn() }), { virtual: true });
+jest.mock('../../services/auth.service', () => ({ iniciarSesion: jest.fn() }));
 
 global.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -28,7 +28,8 @@ test('HU-02: Entrar con credenciales incorrectas muestra error y conserva el for
   await act(async () => { await enter.props.onPress(); });
 
   expect(iniciarSesion).toHaveBeenCalledWith('ana@example.test', 'incorrecta');
-  const alerts = tree.root.findAllByProps({ accessibilityRole: 'alert' });
+  const alerts = tree.root.findAllByType(View)
+    .filter((view) => view.props.accessibilityRole === 'alert');
   expect(alerts).toHaveLength(1);
   expect(alerts[0].findAllByType(Text).some((text) =>
     typeof text.props.children === 'string' && /correo|contraseña|credenciales/i.test(text.props.children)

@@ -3,7 +3,7 @@ import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, ScrollView, T
 import { registrarCiudadano } from '../../services/registration.service';
 import { colors, styles } from './styles';
 
-export default function RegisterScreen({ otpGateway, onRegistered }) {
+export default function RegisterScreen({ otpGateway, onRegistered, onLogin }) {
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -46,6 +46,9 @@ export default function RegisterScreen({ otpGateway, onRegistered }) {
           {!!error && <View accessibilityRole="alert" style={styles.errorBox}><Text style={styles.errorText}>{error}</Text></View>}
           <TouchableOpacity accessibilityRole="button" accessibilityLabel="Crear cuenta" style={styles.primaryButton} onPress={handleRegister} disabled={loading}>
             {loading ? <ActivityIndicator color={colors.surface} /> : <Text style={styles.primaryText}>Crear cuenta →</Text>}
+          </TouchableOpacity>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Iniciar sesión" style={styles.secondaryButton} onPress={onLogin} disabled={loading}>
+            <Text style={styles.secondaryText}>¿Ya tienes cuenta? Inicia sesión</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
