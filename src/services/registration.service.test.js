@@ -27,7 +27,7 @@ test('rechaza campos obligatorios inválidos antes de crear una cuenta', async (
   expect(setDoc).not.toHaveBeenCalled();
 });
 
-test('registra un perfil no verificado y solicita el OTP al servicio confiable', async () => {
+test('registra un perfil no verificado y solicita el OTP al módulo de correo', async () => {
   const gateway = { solicitarCodigo: jest.fn().mockResolvedValue() };
 
   await registrarCiudadano({ nombre: 'Ana Pérez', email, password }, gateway);
@@ -41,7 +41,24 @@ test('registra un perfil no verificado y solicita el OTP al servicio confiable',
   expect(setDoc).toHaveBeenCalledTimes(1);
 });
 
-test('acepta una verificación confirmada por el servicio confiable', async () => {
+test('tras fallar el envío conserva la cuenta pendiente y permite reenviar sin registrarla de nuevo', async () => {
+  const gateway = {
+    solicitarCodigo: jest.fn().mockRejectedValue(new Error('No se pudo enviar el código por correo.')),
+    reenviarCodigo: jest.fn().mockResolvedValue({ enviado: true }),
+  };
+
+  await expect(registrarCiudadano({ nombre: 'Ana Pérez', email, password }, gateway))
+    .rejects.toThrow(/No se pudo enviar/);
+  expect(createUserWithEmailAndPassword).toHaveBeenCalledTimes(1);
+  expect(setDoc).toHaveBeenCalledWith(
+    { collection: 'usuarios', id: uid },
+    expect.objectContaining({ emailVerificado: false }),
+  );
+  await expect(reenviarCodigo(uid, gateway)).resolves.toEqual({ enviado: true });
+  expect(createUserWithEmailAndPassword).toHaveBeenCalledTimes(1);
+});
+
+test('acepta una verificación confirmada por el módulo OTP', async () => {
   const gateway = { verificarCodigo: jest.fn().mockResolvedValue({ verificado: true }) };
 
   await expect(verificarCodigo(uid, '123456', gateway)).resolves.toEqual({ verificado: true });
@@ -50,7 +67,7 @@ test('acepta una verificación confirmada por el servicio confiable', async () =
   expect(setDoc).not.toHaveBeenCalled();
 });
 
-test('rechaza el OTP expirado según la respuesta del servicio confiable', async () => {
+test('rechaza el OTP expirado según la respuesta del módulo OTP', async () => {
   const gateway = {
     verificarCodigo: jest.fn().mockRejectedValue(new Error('El código expiró. Solicita uno nuevo.')),
   };
@@ -59,7 +76,7 @@ test('rechaza el OTP expirado según la respuesta del servicio confiable', async
   expect(setDoc).not.toHaveBeenCalled();
 });
 
-test('respeta el bloqueo de intentos informado por el servicio confiable', async () => {
+test('respeta el bloqueo de intentos informado por el módulo OTP', async () => {
   const gateway = {
     verificarCodigo: jest.fn()
       .mockRejectedValueOnce(new Error('Código incorrecto'))
@@ -78,7 +95,7 @@ test('respeta el bloqueo de intentos informado por el servicio confiable', async
   expect(setDoc).not.toHaveBeenCalled();
 });
 
-test('delega el reenvío y la invalidación del código anterior al servicio confiable', async () => {
+test('delega el reenvío y la invalidación del código anterior al módulo OTP', async () => {
   const gateway = { reenviarCodigo: jest.fn().mockResolvedValue({ enviado: true }) };
 
   await expect(reenviarCodigo(uid, gateway)).resolves.toEqual({ enviado: true });

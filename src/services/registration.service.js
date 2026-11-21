@@ -4,7 +4,7 @@ import { auth, db } from '../../config/firebase';
 
 function requireGateway(gateway, operation) {
   if (typeof gateway?.[operation] !== 'function') {
-    throw new Error('El servicio confiable de verificación de correo aún no está configurado.');
+    throw new Error('El servicio de verificación de correo aún no está configurado.');
   }
 }
 
