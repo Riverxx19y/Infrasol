@@ -52,4 +52,12 @@ La referencia usa el mismo punto de entrada, pero su `App.js` monta los proveedo
 
 Integra solo las funciones y dependencias que exige cada historia. Los servicios de autenticación y reportes agrupan operaciones de varios sprints, así que su reutilización requiere revisar cada operación y sus criterios de aceptación. Chat, exportación, moderación y otras funciones de la referencia quedan pendientes de una historia aplicable. Jest, CI y Firestore Emulator corresponden a las tareas de preparación técnica transversal del backlog y quedan pendientes.
 
+## HU-01 · Estado de GREEN
+
+`src/services/registration.service.js` valida los datos, crea la cuenta de Firebase Authentication y guarda el perfil ciudadano con `emailVerificado: false`. La emisión, verificación y el reenvío del OTP se delegan a un servicio confiable mediante `solicitarCodigo`, `verificarCodigo` y `reenviarCodigo`. Sin esa integración, el registro falla antes de crear la cuenta y el envío de correo no se presenta como operativo.
+
+El servicio confiable aún debe generar y enviar códigos de seis dígitos, guardar el desafío fuera del acceso del cliente, aplicar expiración de 15 minutos, cinco intentos como máximo, límite de reenvíos e invalidación del código anterior. Debe autenticar al solicitante y ser el único autorizado para marcar `emailVerificado: true`. También debe resolver de forma recuperable los casos en que se cree la cuenta o el perfil y falle un paso posterior. Las pruebas unitarias del cliente verifican la delegación y la propagación de errores simulados. No prueban todavía la política real del servidor.
+
+`puedeAcceder` expresa la regla de HU-01: solo un usuario con perfil cuyo correo esté verificado puede acceder. Oscar conectará esa regla al estado de sesión y a la navegación de HU-02. La pantalla inicial del Sprint 0 continúa montada.
+
 Los valores públicos de la referencia se guardan únicamente en el `.env` local ignorado. Los archivos originales `firebaseConfig.js`, `config/firebase.js`, `config/admin.js`, `eas.json`, las configuraciones locales y `scripts/crearAdminsEntidades.js` permanecen en la referencia. Las credenciales administrativas deben mantenerse fuera del código cliente.
