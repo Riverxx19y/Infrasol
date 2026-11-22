@@ -3,6 +3,13 @@
     "name": "INFRASOL",
     "slug": "infrasol-scrum-nuevo",
     "version": "0.1.0",
-    "platforms": ["android", "ios"]
+    "platforms": ["android", "ios"],
+    "plugins": [
+      ["expo-location", { "locationWhenInUsePermission": "INFRASOL utiliza tu ubicación para registrar el lugar del reporte." }],
+      ["expo-image-picker", {
+        "photosPermission": "INFRASOL necesita acceso a tus fotos para adjuntar una imagen opcional al reporte.",
+        "cameraPermission": "INFRASOL necesita la cámara para tomar una foto opcional del reporte."
+      }]
+    ]
   }
 }

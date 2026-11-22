@@ -11,11 +11,13 @@ import VerificationScreen from '../screens/auth/VerificationScreen';
 import RestrictedAccessScreen from '../screens/auth/RestrictedAccessScreen';
 import StartScreen from '../screens/StartScreen';
 import AdminScreen from '../screens/admin/AdminScreen';
+import CreateReportScreen from '../screens/reports/CreateReportScreen';
 
 export default function RootNavigator() {
   const [user, setUser] = useState(undefined);
   const [profile, setProfile] = useState(undefined);
   const [authMode, setAuthMode] = useState('register');
+  const [showCreateReport, setShowCreateReport] = useState(false);
 
   async function handleSignOut() {
     await signOut(auth);
@@ -30,6 +32,7 @@ export default function RootNavigator() {
       stopProfile();
       stopProfile = () => {};
       setUser(currentUser);
+      setShowCreateReport(false);
       setProfile(currentUser ? undefined : null);
       if (currentUser) {
         stopProfile = onSnapshot(
@@ -63,6 +66,9 @@ export default function RootNavigator() {
     return <VerificationScreen user={user} otpGateway={otpGateway} onUseAnotherAccount={handleSignOut} />;
   }
   if (profile?.rol === 'administrador') return <AdminScreen onSignOut={handleSignOut} />;
-  if (profile?.rol === 'ciudadano') return <StartScreen onSignOut={handleSignOut} />;
+  if (profile?.rol === 'ciudadano') {
+    if (showCreateReport) return <CreateReportScreen user={user} onBack={() => setShowCreateReport(false)} />;
+    return <StartScreen onSignOut={handleSignOut} onCreateReport={() => setShowCreateReport(true)} />;
+  }
   return <RestrictedAccessScreen onSignOut={handleSignOut} />;
 }

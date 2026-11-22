@@ -16,6 +16,35 @@ service cloud.firestore {
         && request.resource.data.emailVerificado == false;
       allow update, delete: if false;
     }
+    match /reportes/{reportId} {
+      function ciudadanoVerificado() {
+        return request.auth != null
+          && exists(/databases/$(database)/documents/usuarios/$(request.auth.uid))
+          && get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol == 'ciudadano'
+          && get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.emailVerificado == true;
+      }
+
+      function reporteValido() {
+        let data = request.resource.data;
+        return data.keys().hasOnly([
+            'tipo', 'descripcion', 'lat', 'lng', 'lugar', 'usuarioId',
+            'estado', 'fotoUrl', 'fecha'
+          ])
+          && data.keys().hasAll(['tipo', 'descripcion', 'lat', 'lng', 'usuarioId', 'estado', 'fecha'])
+          && data.usuarioId == request.auth.uid
+          && data.estado == 'Pendiente'
+          && data.tipo is string && data.tipo.size() > 0
+          && data.descripcion is string && data.descripcion.size() > 0
+          && data.lat is number && data.lat >= -90 && data.lat <= 90
+          && data.lng is number && data.lng >= -180 && data.lng <= 180
+          && data.get('lugar', '') is string
+          && (data.get('fotoUrl', null) == null || data.get('fotoUrl', null) is string)
+          && data.fecha is timestamp;
+      }
+
+      allow create: if ciudadanoVerificado() && reporteValido();
+      allow get, list, update, delete: if false;
+    }
     match /verificaciones/{userId} {
       allow read, write: if false;
     }
