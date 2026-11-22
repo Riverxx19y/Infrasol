@@ -11,11 +11,11 @@ jest.mock('firebase/firestore', () => ({
   doc: jest.fn((database, collection, id) => ({ collection, id })),
   onSnapshot: jest.fn(),
 }));
-jest.mock('../screens/auth/LoginScreen', () => 'LoginScreen', { virtual: true });
+jest.mock('../screens/auth/LoginScreen', () => 'LoginScreen');
 jest.mock('../screens/auth/RegisterScreen', () => 'RegisterScreen');
 jest.mock('../screens/auth/VerificationScreen', () => 'VerificationScreen');
 jest.mock('../screens/StartScreen', () => 'StartScreen');
-jest.mock('../screens/admin/AdminScreen', () => 'AdminScreen', { virtual: true });
+jest.mock('../screens/admin/AdminScreen', () => 'AdminScreen');
 
 global.IS_REACT_ACT_ENVIRONMENT = true;
 
