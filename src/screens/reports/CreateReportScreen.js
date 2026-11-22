@@ -54,7 +54,7 @@ export default function CreateReportScreen({ user, onBack, onCreated }) {
         return;
       }
 
-      const options = { mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, aspect: [4, 3], quality: 0.7, base64: true };
+      const options = { mediaTypes: ['images'], allowsEditing: true, aspect: [4, 3], quality: 0.7, base64: true };
       const result = isCamera
         ? await ImagePicker.launchCameraAsync(options)
         : await ImagePicker.launchImageLibraryAsync(options);
@@ -146,9 +146,9 @@ export default function CreateReportScreen({ user, onBack, onCreated }) {
       <Text style={styles.label}>Ubicación GPS *</Text>
       <TouchableOpacity
         accessibilityRole="button" accessibilityLabel="Obtener ubicación"
-        disabled={gpsLoading || sending} onPress={capturarUbicacion} style={styles.gpsButton}
+        disabled={gpsLoading || sending} onPress={capturarUbicacion} style={styles.actionButton}
       >
-        {gpsLoading ? <ActivityIndicator color="#0057FF" /> : <Text style={styles.gpsText}>📍 {ubicacion ? 'Actualizar ubicación' : 'Obtener ubicación'}</Text>}
+        {gpsLoading ? <ActivityIndicator color="#0057FF" /> : <Text style={styles.actionText}>📍 {ubicacion ? 'Actualizar ubicación' : 'Obtener ubicación'}</Text>}
       </TouchableOpacity>
       {ubicacion && (
         <View style={styles.locationBox}>
@@ -160,9 +160,9 @@ export default function CreateReportScreen({ user, onBack, onCreated }) {
       <Text style={styles.label}>Fotografía (opcional)</Text>
       <TouchableOpacity
         accessibilityRole="button" accessibilityLabel="Agregar foto"
-        disabled={sending} onPress={seleccionarFoto} style={styles.photoButton}
+        disabled={sending} onPress={seleccionarFoto} style={styles.actionButton}
       >
-        <Text style={styles.photoButtonText}>{photo ? 'Cambiar foto' : 'Agregar foto'}</Text>
+        <Text style={styles.actionText}>{photo ? 'Cambiar foto' : 'Agregar foto'}</Text>
       </TouchableOpacity>
       {photo && <Image source={{ uri: photo.uri }} style={styles.photoPreview} resizeMode="cover" />}
 
@@ -194,13 +194,11 @@ const styles = StyleSheet.create({
   typeText: { color: '#334155', fontWeight: '600' },
   typeTextSelected: { color: '#0044CC' },
   description: { minHeight: 112, padding: 14, backgroundColor: '#FFFFFF', borderColor: '#CBD5E1', borderWidth: 1, borderRadius: 12, fontSize: 15 },
-  gpsButton: { backgroundColor: '#FFFFFF', borderColor: '#0057FF', borderWidth: 1, borderRadius: 12, padding: 15, alignItems: 'center' },
-  gpsText: { color: '#0057FF', fontWeight: '700' },
+  actionButton: { backgroundColor: '#FFFFFF', borderColor: '#0057FF', borderWidth: 1, borderRadius: 12, padding: 15, alignItems: 'center' },
+  actionText: { color: '#0057FF', fontWeight: '700' },
   locationBox: { backgroundColor: '#E7F6EF', borderRadius: 12, padding: 13, marginTop: 10 },
   locationText: { color: '#14532D', fontWeight: '600' },
   coordinates: { color: '#475569', marginTop: 4 },
-  photoButton: { backgroundColor: '#FFFFFF', borderColor: '#0057FF', borderWidth: 1, borderRadius: 12, padding: 15, alignItems: 'center' },
-  photoButtonText: { color: '#0057FF', fontWeight: '700' },
   photoPreview: { width: '100%', height: 200, borderRadius: 12, marginTop: 10 },
   errorBox: { backgroundColor: '#FEE2E2', borderRadius: 10, padding: 12, marginTop: 18 },
   errorText: { color: '#991B1B' },

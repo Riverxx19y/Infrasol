@@ -3,7 +3,6 @@ import { act, create } from 'react-test-renderer';
 import { Alert, Image, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 jest.mock('expo-image-picker', () => ({
-  MediaTypeOptions: { Images: 'Images' },
   requestCameraPermissionsAsync: jest.fn(),
   requestMediaLibraryPermissionsAsync: jest.fn(),
   launchCameraAsync: jest.fn(),
@@ -72,6 +71,7 @@ test('HU-03 RED 2: solicita permiso y selecciona una imagen de galería', async 
   await chooseSource(tree, 'Galería');
   expect(Picker.requestMediaLibraryPermissionsAsync).toHaveBeenCalledTimes(1);
   expect(Picker.launchImageLibraryAsync).toHaveBeenCalledTimes(1);
+  expect(Picker.launchImageLibraryAsync).toHaveBeenCalledWith(expect.objectContaining({ mediaTypes: ['images'] }));
   expect(Picker.requestMediaLibraryPermissionsAsync.mock.invocationCallOrder[0])
     .toBeLessThan(Picker.launchImageLibraryAsync.mock.invocationCallOrder[0]);
   expect(tree.root.findAllByType(Image).some((image) => image.props.source?.uri === 'file://galeria.jpg')).toBe(true);
@@ -83,6 +83,7 @@ test('HU-03 RED 2: solicita permiso y captura una imagen con cámara', async () 
   await chooseSource(tree, 'Cámara');
   expect(Picker.requestCameraPermissionsAsync).toHaveBeenCalledTimes(1);
   expect(Picker.launchCameraAsync).toHaveBeenCalledTimes(1);
+  expect(Picker.launchCameraAsync).toHaveBeenCalledWith(expect.objectContaining({ mediaTypes: ['images'] }));
   expect(Picker.requestCameraPermissionsAsync.mock.invocationCallOrder[0])
     .toBeLessThan(Picker.launchCameraAsync.mock.invocationCallOrder[0]);
   expect(tree.root.findAllByType(Image).some((image) => image.props.source?.uri === 'file://camara.jpg')).toBe(true);

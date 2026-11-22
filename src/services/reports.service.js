@@ -1,6 +1,6 @@
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../../config/firebase';
-import { coordenadasValidas } from './location.service';
+import { coordenadasValidas } from '../utils/coordinates';
 
 export async function crearReporte({ tipo, descripcion, lat, lng, direccion, fotoUrl } = {}) {
   const usuarioId = auth.currentUser?.uid;
