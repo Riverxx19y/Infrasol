@@ -18,7 +18,9 @@
     "expo-location": "~19.0.8",
     "firebase": "11.10.0",
     "react": "19.1.0",
-    "react-native": "0.81.5"
+    "react-native": "0.81.5",
+    "react-native-maps": "1.20.1",
+    "supercluster": "^7.1.5"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "4.0.1",

@@ -3,8 +3,8 @@ import { act, create } from 'react-test-renderer';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-jest.mock('../../services/mapReports.service', () => ({ obtenerReportesActivos: jest.fn() }), { virtual: true });
-jest.mock('react-native-maps', () => ({ __esModule: true, default: 'MapView', Marker: 'Marker', Callout: 'Callout' }), { virtual: true });
+jest.mock('../../services/mapReports.service', () => ({ obtenerReportesActivos: jest.fn() }));
+jest.mock('react-native-maps', () => ({ __esModule: true, default: 'MapView', Marker: 'Marker', Callout: 'Callout' }));
 
 const { obtenerReportesActivos } = require('../../services/mapReports.service');
 const MapScreen = existsSync(join(__dirname, 'MapScreen.js'))

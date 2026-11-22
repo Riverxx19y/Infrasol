@@ -1,5 +1,6 @@
 import React from 'react';
 import { act, create } from 'react-test-renderer';
+import { TouchableOpacity } from 'react-native';
 import { onAuthStateChanged } from 'firebase/auth';
 import { onSnapshot } from 'firebase/firestore';
 
@@ -14,7 +15,7 @@ jest.mock('../screens/auth/VerificationScreen', () => 'VerificationScreen');
 jest.mock('../screens/auth/RestrictedAccessScreen', () => 'RestrictedAccessScreen');
 jest.mock('../screens/admin/AdminScreen', () => 'AdminScreen');
 jest.mock('../screens/reports/CreateReportScreen', () => 'CreateReportScreen');
-jest.mock('../screens/map/MapScreen', () => 'MapScreen', { virtual: true });
+jest.mock('../screens/map/MapScreen', () => 'MapScreen');
 
 const RootNavigator = require('./RootNavigator').default;
 global.IS_REACT_ACT_ENVIRONMENT = true;
@@ -80,7 +81,8 @@ test('volver del mapa devuelve al inicio sin perder el acceso a HU-03', () => {
     const map = tree.root.findByType('MapScreen');
     expect(map.props.onBack).toEqual(expect.any(Function));
     act(() => map.props.onBack());
-    expect(tree.root.findAll((node) => node.props.accessibilityLabel === 'Crear reporte')).toHaveLength(1);
+    expect(tree.root.findAllByType(TouchableOpacity)
+      .filter((node) => node.props.accessibilityLabel === 'Crear reporte')).toHaveLength(1);
   } finally {
     act(() => tree.unmount());
   }
