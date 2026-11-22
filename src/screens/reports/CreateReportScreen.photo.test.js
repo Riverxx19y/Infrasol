@@ -145,7 +145,7 @@ test('HU-03 RED 2: una foto subida queda asociada al reporte con sus campos obli
 });
 
 test('HU-03 RED 2: tras fallar la subida avisa y permite enviar una sola vez sin foto', async () => {
-  subirFoto.mockRejectedValue(new Error('ImgBB no disponible'));
+  subirFoto.mockRejectedValue(new Error('Servidor de imágenes no disponible'));
   const { tree, onCreated } = renderScreen();
   await fillRequiredFields(tree);
   await chooseSource(tree, 'Galería');
@@ -161,6 +161,18 @@ test('HU-03 RED 2: tras fallar la subida avisa y permite enviar una sola vez sin
   expect(crearReporte).toHaveBeenCalledTimes(1);
   expect(crearReporte.mock.calls[0][0].fotoUrl).toBeFalsy();
   expect(onCreated).toHaveBeenCalledTimes(1);
+  act(() => { tree.unmount(); });
+});
+
+test('HU-03: una foto demasiado grande indica que se seleccione una más pequeña', async () => {
+  subirFoto.mockRejectedValue(new Error('La fotografía es demasiado grande. Selecciona una más pequeña.'));
+  const { tree } = renderScreen();
+  await fillRequiredFields(tree);
+  await chooseSource(tree, 'Galería');
+  await act(async () => { await button(tree, 'Crear reporte').props.onPress(); });
+  const warning = Alert.alert.mock.calls.find(([title]) => /subir foto/i.test(title));
+  expect(warning?.[1]).toMatch(/más pequeña/i);
+  expect(crearReporte).not.toHaveBeenCalled();
   act(() => { tree.unmount(); });
 });
 

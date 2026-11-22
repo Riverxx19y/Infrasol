@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { obtenerUbicacionActual } from '../../services/location.service';
+import { subirFoto } from '../../services/photo.service';
 import { crearReporte } from '../../services/reports.service';
 
 const TIPOS = ['Alumbrado', 'Vías', 'Alcantarillado', 'Basuras', 'Zonas verdes', 'Otro'];
@@ -9,6 +11,7 @@ export default function CreateReportScreen({ user, onBack, onCreated }) {
   const [tipo, setTipo] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [ubicacion, setUbicacion] = useState(null);
+  const [photo, setPhoto] = useState(null);
   const [gpsLoading, setGpsLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
@@ -29,7 +32,45 @@ export default function CreateReportScreen({ user, onBack, onCreated }) {
     }
   }
 
-  async function enviar() {
+  function seleccionarFoto() {
+    if (sendingRef.current) return;
+    Alert.alert('Agregar foto', '¿Cómo quieres agregar la foto?', [
+      { text: 'Cámara', onPress: () => abrirFuente('camera') },
+      { text: 'Galería', onPress: () => abrirFuente('gallery') },
+      { text: 'Cancelar', style: 'cancel' },
+    ]);
+  }
+
+  async function abrirFuente(source) {
+    if (sendingRef.current) return;
+    setError('');
+    const isCamera = source === 'camera';
+    try {
+      const permission = isCamera
+        ? await ImagePicker.requestCameraPermissionsAsync()
+        : await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (permission.status !== 'granted') {
+        setError(`Permiso de ${isCamera ? 'cámara' : 'galería'} denegado. Puedes enviar el reporte sin foto.`);
+        return;
+      }
+
+      const options = { mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, aspect: [4, 3], quality: 0.7, base64: true };
+      const result = isCamera
+        ? await ImagePicker.launchCameraAsync(options)
+        : await ImagePicker.launchImageLibraryAsync(options);
+      if (result.canceled) return;
+      const asset = result.assets?.[0];
+      if (typeof asset?.uri !== 'string' || typeof asset?.base64 !== 'string' || !asset.base64) {
+        setError('No se pudo preparar la fotografía. Puedes enviar el reporte sin foto.');
+        return;
+      }
+      setPhoto({ uri: asset.uri, base64: asset.base64 });
+    } catch {
+      setError('No se pudo seleccionar la fotografía. Puedes enviar el reporte sin foto.');
+    }
+  }
+
+  async function enviar(sinFoto = false) {
     if (sendingRef.current) return;
     setSuccess('');
     if (!tipo) { setError('Selecciona un tipo de reporte.'); return; }
@@ -41,10 +82,23 @@ export default function CreateReportScreen({ user, onBack, onCreated }) {
     setSending(true);
     setError('');
     try {
+      let fotoUrl = null;
+      if (photo?.base64 && !sinFoto) {
+        try {
+          fotoUrl = await subirFoto(photo.base64);
+        } catch (cause) {
+          Alert.alert('Error al subir foto', `${cause?.message || 'No se pudo subir la fotografía.'} ¿Enviar el reporte sin foto?`, [
+            { text: 'Cancelar', style: 'cancel' },
+            { text: 'Enviar sin foto', onPress: () => enviar(true) },
+          ]);
+          return;
+        }
+      }
       const id = await crearReporte({
         tipo, descripcion: descripcion.trim(),
         lat: ubicacion.latitude, lng: ubicacion.longitude,
         direccion: ubicacion.direccion,
+        fotoUrl,
       });
       setSuccess('Reporte creado exitosamente.');
       onCreated?.(id);
@@ -103,13 +157,22 @@ export default function CreateReportScreen({ user, onBack, onCreated }) {
         </View>
       )}
 
+      <Text style={styles.label}>Fotografía (opcional)</Text>
+      <TouchableOpacity
+        accessibilityRole="button" accessibilityLabel="Agregar foto"
+        disabled={sending} onPress={seleccionarFoto} style={styles.photoButton}
+      >
+        <Text style={styles.photoButtonText}>{photo ? 'Cambiar foto' : 'Agregar foto'}</Text>
+      </TouchableOpacity>
+      {photo && <Image source={{ uri: photo.uri }} style={styles.photoPreview} resizeMode="cover" />}
+
       {error ? <View accessibilityRole="alert" style={styles.errorBox}><Text style={styles.errorText}>{error}</Text></View> : null}
       {success ? <View accessibilityRole="alert" style={styles.successBox}><Text style={styles.successText}>{success}</Text></View> : null}
 
       <TouchableOpacity
         accessibilityRole="button" accessibilityLabel="Crear reporte"
         accessibilityState={{ disabled: sending }} disabled={sending}
-        onPress={enviar} style={[styles.submit, sending && styles.submitDisabled]}
+        onPress={() => enviar()} style={[styles.submit, sending && styles.submitDisabled]}
       >
         {sending ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.submitText}>Crear reporte</Text>}
       </TouchableOpacity>
@@ -136,6 +199,9 @@ const styles = StyleSheet.create({
   locationBox: { backgroundColor: '#E7F6EF', borderRadius: 12, padding: 13, marginTop: 10 },
   locationText: { color: '#14532D', fontWeight: '600' },
   coordinates: { color: '#475569', marginTop: 4 },
+  photoButton: { backgroundColor: '#FFFFFF', borderColor: '#0057FF', borderWidth: 1, borderRadius: 12, padding: 15, alignItems: 'center' },
+  photoButtonText: { color: '#0057FF', fontWeight: '700' },
+  photoPreview: { width: '100%', height: 200, borderRadius: 12, marginTop: 10 },
   errorBox: { backgroundColor: '#FEE2E2', borderRadius: 10, padding: 12, marginTop: 18 },
   errorText: { color: '#991B1B' },
   successBox: { backgroundColor: '#DCFCE7', borderRadius: 10, padding: 12, marginTop: 18 },
