@@ -4,7 +4,7 @@ import { TextInput, TouchableOpacity, View } from 'react-native';
 
 jest.mock('../../services/location.service', () => ({ obtenerUbicacionActual: jest.fn() }));
 jest.mock('../../services/reports.service', () => ({ crearReporte: jest.fn() }));
-jest.mock('../../services/photo.service', () => ({ subirFoto: jest.fn() }), { virtual: true });
+jest.mock('../../services/photo.service', () => ({ subirFoto: jest.fn() }));
 
 const { obtenerUbicacionActual } = require('../../services/location.service');
 const { crearReporte } = require('../../services/reports.service');

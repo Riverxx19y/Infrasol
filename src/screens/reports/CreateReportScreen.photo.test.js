@@ -7,10 +7,10 @@ jest.mock('expo-image-picker', () => ({
   requestMediaLibraryPermissionsAsync: jest.fn(),
   launchCameraAsync: jest.fn(),
   launchImageLibraryAsync: jest.fn(),
-}), { virtual: true });
+}));
 jest.mock('../../services/location.service', () => ({ obtenerUbicacionActual: jest.fn() }));
 jest.mock('../../services/reports.service', () => ({ crearReporte: jest.fn() }));
-jest.mock('../../services/photo.service', () => ({ subirFoto: jest.fn() }), { virtual: true });
+jest.mock('../../services/photo.service', () => ({ subirFoto: jest.fn() }));
 
 const Picker = require('expo-image-picker');
 const { obtenerUbicacionActual } = require('../../services/location.service');
