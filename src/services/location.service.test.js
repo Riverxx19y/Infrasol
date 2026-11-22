@@ -3,7 +3,7 @@ jest.mock('expo-location', () => ({
   getCurrentPositionAsync: jest.fn(),
   reverseGeocodeAsync: jest.fn(),
   Accuracy: { High: 4 },
-}), { virtual: true });
+}));
 
 const Location = require('expo-location');
 

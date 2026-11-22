@@ -3,6 +3,9 @@
     "name": "INFRASOL",
     "slug": "infrasol-scrum-nuevo",
     "version": "0.1.0",
-    "platforms": ["android", "ios"]
+    "platforms": ["android", "ios"],
+    "plugins": [
+      ["expo-location", { "locationWhenInUsePermission": "INFRASOL utiliza tu ubicación para registrar el lugar del reporte." }]
+    ]
   }
 }

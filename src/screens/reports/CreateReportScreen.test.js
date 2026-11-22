@@ -2,8 +2,8 @@ import React from 'react';
 import { act, create } from 'react-test-renderer';
 import { TextInput, TouchableOpacity, View } from 'react-native';
 
-jest.mock('../../services/location.service', () => ({ obtenerUbicacionActual: jest.fn() }), { virtual: true });
-jest.mock('../../services/reports.service', () => ({ crearReporte: jest.fn() }), { virtual: true });
+jest.mock('../../services/location.service', () => ({ obtenerUbicacionActual: jest.fn() }));
+jest.mock('../../services/reports.service', () => ({ crearReporte: jest.fn() }));
 
 const { obtenerUbicacionActual } = require('../../services/location.service');
 const { crearReporte } = require('../../services/reports.service');

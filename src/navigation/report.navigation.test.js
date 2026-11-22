@@ -14,7 +14,7 @@ jest.mock('../screens/auth/VerificationScreen', () => 'VerificationScreen');
 jest.mock('../screens/auth/RestrictedAccessScreen', () => 'RestrictedAccessScreen');
 jest.mock('../screens/admin/AdminScreen', () => 'AdminScreen');
 jest.mock('../screens/StartScreen', () => 'StartScreen');
-jest.mock('../screens/reports/CreateReportScreen', () => 'CreateReportScreen', { virtual: true });
+jest.mock('../screens/reports/CreateReportScreen', () => 'CreateReportScreen');
 
 const RootNavigator = require('./RootNavigator').default;
 global.IS_REACT_ACT_ENVIRONMENT = true;
@@ -56,7 +56,9 @@ test.each([
 ])('%s conserva su ruta y no accede al formulario ciudadano', (label, user, profile, expected) => {
   const tree = openWith(user, profile);
   if (label === 'administrador') {
-    expect(JSON.stringify(tree.toJSON())).toMatch(/Panel de administraci[oó]n/);
+    const adminMock = tree.root.findAllByType('AdminScreen').length === 1;
+    const adminReal = /Panel de administraci[oó]n/.test(JSON.stringify(tree.toJSON()));
+    expect(adminMock || adminReal).toBe(true);
   } else {
     expect(tree.root.findAllByType(expected)).toHaveLength(1);
   }

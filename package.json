@@ -9,11 +9,12 @@
     "ios": "expo start --ios",
     "test": "jest",
     "test:ci": "jest --runInBand --coverage --watch=false",
-    "test:rules": "firebase emulators:exec --only firestore --project demo-infrasol-hu01 \"node --test tests/firestore.rules.test.cjs\""
+    "test:rules": "firebase emulators:exec --only firestore --project demo-infrasol-hu01 \"node --test --test-concurrency=1 tests/firestore.rules.test.cjs tests/reports.rules.test.cjs\""
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "54.0.35",
+    "expo-location": "~19.0.8",
     "firebase": "11.10.0",
     "react": "19.1.0",
     "react-native": "0.81.5"
