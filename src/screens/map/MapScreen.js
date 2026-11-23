@@ -5,6 +5,7 @@ import ReportBubble, { bubbleSize } from '../../components/map/ReportBubble';
 import { obtenerReportesActivos } from '../../services/mapReports.service';
 import { mapZoom, project, viewport } from '../../utils/mapGeometry';
 import { consultarClusteres, crearMarcadores, prepararClusteres } from '../../utils/mapReports';
+import { lugarDeReporte } from '../../utils/reportFormat';
 
 const DEFAULT_REGION = {
   latitude: 9.3047,
@@ -108,7 +109,7 @@ export default function MapScreen({ onBack }) {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>{selected.tipo}</Text>
           <Text>{selected.descripcion}</Text>
-          <Text style={styles.place}>{selected.lugar || 'Ubicación sin dirección'}</Text>
+          <Text style={styles.place}>{lugarDeReporte(selected)}</Text>
           <Text style={styles.priority}>{selected.estilo.prioridad || 'Sin prioridad definida'}</Text>
         </View>
       )}
