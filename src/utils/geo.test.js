@@ -33,10 +33,17 @@ test('rechaza coordenadas inválidas y acepta ceros válidos', () => {
   }
 });
 
-test('filtra categoría, Resuelto y reporte propio', () => {
+test('filtra categoría y Resuelto, e incluye el reporte propio como posible duplicado', () => {
   expect(esCandidatoCercano).toEqual(expect.any(Function));
   const search = { tipo: 'Alumbrado', lat: 0, lng: 0, uid: 'otro' };
   expect(esCandidatoCercano({ ...candidate, tipo: 'Vías' }, search)).toBe(false);
   expect(esCandidatoCercano({ ...candidate, estado: 'Resuelto' }, search)).toBe(false);
-  expect(esCandidatoCercano(candidate, { ...search, uid: 'autor' })).toBe(false);
+  expect(esCandidatoCercano(candidate, { ...search, uid: 'autor' })).toBe(true);
+});
+
+test('las dos ubicaciones de Carrera 24 están a unos 4,7 metros', () => {
+  const [lat, lng] = [9.3226717, -75.2931700];
+  const reporte = { ...candidate, lat: 9.3227059, lng: -75.2931446 };
+  expect(distanciaMetros(lat, lng, reporte.lat, reporte.lng)).toBeCloseTo(4.72, 1);
+  expect(esCandidatoCercano(reporte, { tipo: 'Alumbrado', lat, lng })).toBe(true);
 });

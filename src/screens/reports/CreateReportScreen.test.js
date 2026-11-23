@@ -95,8 +95,10 @@ test('impide dos envíos mientras Firestore sigue procesando el primero', async 
   crearReporte.mockReturnValue(new Promise((resolve) => { finish = resolve; }));
   const { tree } = renderScreen();
   await fillValidForm(tree);
-  act(() => { button(tree, 'Crear reporte').props.onPress(); });
-  act(() => { button(tree, 'Crear reporte').props.onPress(); });
+  await act(async () => {
+    button(tree, 'Crear reporte').props.onPress();
+    button(tree, 'Crear reporte').props.onPress();
+  });
   expect(crearReporte).toHaveBeenCalledTimes(1);
   await act(async () => { finish('reporte-1'); });
   act(() => { tree.unmount(); });
