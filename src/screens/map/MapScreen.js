@@ -6,6 +6,8 @@ import { obtenerReportesActivos } from '../../services/mapReports.service';
 import { mapZoom, project, viewport } from '../../utils/mapGeometry';
 import { consultarClusteres, crearMarcadores, prepararClusteres } from '../../utils/mapReports';
 import { lugarDeReporte } from '../../utils/reportFormat';
+import { auth } from '../../../config/firebase';
+import { apoyarReporte } from '../../services/apoyos.gateway';
 
 const DEFAULT_REGION = {
   latitude: 9.3047,
@@ -22,6 +24,27 @@ export default function MapScreen({ onBack }) {
   const [liveRegion, setLiveRegion] = useState(DEFAULT_REGION); // para posicionar (durante el gesto)
   const [mapSize, setMapSize] = useState({ width: 0, height: 0 });
   const [selected, setSelected] = useState(null);
+  const [supportMessage, setSupportMessage] = useState('');
+  const [supporting, setSupporting] = useState(false);
+  const supportingRef = useRef(false);
+
+  async function apoyarSeleccionado() {
+    if (supportingRef.current || !selected) return;
+    supportingRef.current = true;
+    setSupporting(true);
+    setSupportMessage('');
+    try {
+      const { apoyado, apoyos } = await apoyarReporte(selected.id);
+      setSelected((current) => current?.id === selected.id ? { ...current, apoyos } : current);
+      setReports((items) => items.map((item) => item.id === selected.id ? { ...item, apoyos } : item));
+      setSupportMessage(apoyado ? `Apoyo registrado. ${apoyos} apoyos.` : `Ya apoyaste este reporte. ${apoyos} apoyos.`);
+    } catch (cause) {
+      setSupportMessage(cause?.message || 'No se pudo comunicar con el servidor de apoyos.');
+    } finally {
+      supportingRef.current = false;
+      setSupporting(false);
+    }
+  }
 
   useEffect(() => {
     let active = true;
@@ -97,7 +120,11 @@ export default function MapScreen({ onBack }) {
                     size={size}
                     x={x}
                     y={y}
-                    onPress={() => (group.isCluster ? expand(group) : setSelected(group))}
+                    onPress={() => {
+                      setSupportMessage('');
+                      if (group.isCluster) expand(group);
+                      else setSelected(group);
+                    }}
                   />
                 );
               })}
@@ -111,6 +138,14 @@ export default function MapScreen({ onBack }) {
           <Text>{selected.descripcion}</Text>
           <Text style={styles.place}>{lugarDeReporte(selected)}</Text>
           <Text style={styles.priority}>{selected.estilo.prioridad || 'Sin prioridad definida'}</Text>
+          <Text style={styles.place}>{selected.apoyos || 0} apoyos</Text>
+          {selected.estado === 'Pendiente' && selected.usuarioId !== auth.currentUser?.uid && (
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Apoyar reporte"
+              disabled={supporting} onPress={apoyarSeleccionado} style={styles.supportButton}>
+              <Text style={styles.supportText}>Apoyar reporte</Text>
+            </TouchableOpacity>
+          )}
+          {supportMessage ? <Text accessibilityRole="alert" style={styles.place}>{supportMessage}</Text> : null}
         </View>
       )}
     </View>
@@ -127,4 +162,6 @@ const styles = StyleSheet.create({
   cardTitle: { fontSize: 18, fontWeight: '700', color: '#0F172A' },
   place: { marginTop: 6, color: '#475569' },
   priority: { marginTop: 6, color: '#64748B' },
+  supportButton: { backgroundColor: '#0057FF', padding: 12, borderRadius: 10, alignItems: 'center', marginTop: 12 },
+  supportText: { color: '#FFFFFF', fontWeight: '700' },
 });

@@ -11,6 +11,8 @@ jest.mock('expo-image-picker', () => ({
 jest.mock('../../services/location.service', () => ({ obtenerUbicacionActual: jest.fn() }));
 jest.mock('../../services/reports.service', () => ({ crearReporte: jest.fn() }));
 jest.mock('../../services/photo.service', () => ({ subirFoto: jest.fn() }));
+jest.mock('../../services/reportesCercanos.service', () => ({ buscarReportesCercanos: jest.fn().mockResolvedValue([]) }));
+jest.mock('../../services/apoyos.gateway', () => ({ apoyarReporte: jest.fn() }));
 
 const Picker = require('expo-image-picker');
 const { obtenerUbicacionActual } = require('../../services/location.service');

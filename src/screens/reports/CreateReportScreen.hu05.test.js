@@ -10,8 +10,8 @@ import { apoyarReporte } from '../../services/apoyos.gateway';
 jest.mock('../../services/location.service', () => ({ obtenerUbicacionActual: jest.fn() }));
 jest.mock('../../services/reports.service', () => ({ crearReporte: jest.fn() }));
 jest.mock('../../services/photo.service', () => ({ subirFoto: jest.fn() }));
-jest.mock('../../services/reportesCercanos.service', () => ({ buscarReportesCercanos: jest.fn() }), { virtual: true });
-jest.mock('../../services/apoyos.gateway', () => ({ apoyarReporte: jest.fn() }), { virtual: true });
+jest.mock('../../services/reportesCercanos.service', () => ({ buscarReportesCercanos: jest.fn() }));
+jest.mock('../../services/apoyos.gateway', () => ({ apoyarReporte: jest.fn() }));
 
 global.IS_REACT_ACT_ENVIRONMENT = true;
 const candidate = { id: 'reporte-cercano', tipo: 'Alumbrado', estado: 'Pendiente', usuarioId: 'autor-1', apoyos: 2 };

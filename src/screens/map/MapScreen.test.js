@@ -5,6 +5,8 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 jest.mock('../../services/mapReports.service', () => ({ obtenerReportesActivos: jest.fn() }));
+jest.mock('../../../config/firebase', () => ({ auth: { currentUser: { uid: 'u2' } } }));
+jest.mock('../../services/apoyos.gateway', () => ({ apoyarReporte: jest.fn() }));
 jest.mock('react-native-maps', () => ({ __esModule: true, default: 'MapView', Marker: 'Marker', Callout: 'Callout' }));
 
 const { obtenerReportesActivos } = require('../../services/mapReports.service');
