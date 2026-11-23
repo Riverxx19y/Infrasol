@@ -32,6 +32,18 @@ jobs:
       - name: Ejecutar pruebas y cobertura
         run: npm run test:ci
 
+      - name: Configurar Java para Firestore Emulator
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Instalar Firebase CLI
+        run: npm install --global firebase-tools@15.37.0
+
+      - name: Ejecutar pruebas de reglas Firestore
+        run: npm run test:rules
+
       - name: Guardar cobertura
         uses: actions/upload-artifact@v4
         with:
