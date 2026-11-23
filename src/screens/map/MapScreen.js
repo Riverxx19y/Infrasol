@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import MapView from 'react-native-maps';
+import ReportBubble, { bubbleSize } from '../../components/map/ReportBubble';
 import { obtenerReportesActivos } from '../../services/mapReports.service';
-import { agruparMarcadores, crearMarcadores } from '../../utils/mapReports';
+import { mapZoom, project, viewport } from '../../utils/mapGeometry';
+import { consultarClusteres, crearMarcadores, prepararClusteres } from '../../utils/mapReports';
 
 const DEFAULT_REGION = {
   latitude: 9.3047,
@@ -10,69 +12,6 @@ const DEFAULT_REGION = {
   latitudeDelta: 0.03,
   longitudeDelta: 0.03,
 };
-
-const VIEWPORT_PADDING = 0.5;
-
-function viewport(region) {
-  const padLng = region.longitudeDelta * VIEWPORT_PADDING;
-  const padLat = region.latitudeDelta * VIEWPORT_PADDING;
-  return [
-    Math.max(-180, region.longitude - region.longitudeDelta / 2 - padLng),
-    Math.max(-90, region.latitude - region.latitudeDelta / 2 - padLat),
-    Math.min(180, region.longitude + region.longitudeDelta / 2 + padLng),
-    Math.min(90, region.latitude + region.latitudeDelta / 2 + padLat),
-  ];
-}
-
-function mapZoom(region) {
-  return Math.max(0, Math.min(21, Math.round(Math.log2(360 / region.longitudeDelta))));
-}
-
-function clusterSize(count) {
-  if (count < 10) return 44;
-  if (count < 100) return 52;
-  return 60;
-}
-
-// Proyección Mercator: coordenada geográfica -> píxel dentro del mapa
-const mercY = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360));
-
-function project(lat, lng, region, size) {
-  const west = region.longitude - region.longitudeDelta / 2;
-  const top = mercY(region.latitude + region.latitudeDelta / 2);
-  const bottom = mercY(region.latitude - region.latitudeDelta / 2);
-  return {
-    x: ((lng - west) / region.longitudeDelta) * size.width,
-    y: ((top - mercY(lat)) / (top - bottom)) * size.height,
-  };
-}
-
-function Bubble({ group, size, onPress, x, y }) {
-  return (
-    <TouchableOpacity
-      activeOpacity={0.85}
-      onPress={onPress}
-      style={[styles.bubble, { left: x - size / 2, top: y - size / 2, width: size, height: size }]}
-    >
-      {group.isCluster ? (
-        <>
-          <View style={[styles.halo, { borderRadius: (size + 16) / 2 }]} />
-          <View style={[styles.clusterOuter, { borderRadius: size / 2 }]}>
-            <View style={[styles.clusterInner, { width: size - 8, height: size - 8, borderRadius: (size - 8) / 2 }]}>
-              <Text style={styles.clusterText}>{group.count}</Text>
-            </View>
-          </View>
-        </>
-      ) : (
-        <View style={[styles.pinOuter, { backgroundColor: group.estilo.colorPrioridad }]}>
-          <View style={[styles.pinInner, { backgroundColor: group.estilo.categoria }]}>
-            <Text style={styles.pinSymbol}>{group.estilo.simbolo}</Text>
-          </View>
-        </View>
-      )}
-    </TouchableOpacity>
-  );
-}
 
 export default function MapScreen({ onBack }) {
   const mapRef = useRef(null);
@@ -105,9 +44,10 @@ export default function MapScreen({ onBack }) {
   }, []);
 
   const markers = useMemo(() => crearMarcadores(reports), [reports]);
+  const preparedClusters = useMemo(() => prepararClusteres(markers), [markers]);
   const groups = useMemo(
-    () => agruparMarcadores(markers, mapZoom(region), viewport(region)),
-    [markers, region],
+    () => consultarClusteres(preparedClusters, mapZoom(region), viewport(region)),
+    [preparedClusters, region],
   );
 
   function expand(group) {
@@ -146,11 +86,11 @@ export default function MapScreen({ onBack }) {
           {mapSize.width > 0 && (
             <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
               {groups.map((group) => {
-                const size = group.isCluster ? clusterSize(group.count) : 48;
+                const size = bubbleSize(group.count, group.isCluster);
                 const { x, y } = project(group.lat, group.lng, liveRegion, mapSize);
                 if (x < -size || y < -size || x > mapSize.width + size || y > mapSize.height + size) return null;
                 return (
-                  <Bubble
+                  <ReportBubble
                     key={`${group.id}:${group.isCluster ? group.count : 1}`}
                     group={group}
                     size={size}
@@ -182,27 +122,6 @@ const styles = StyleSheet.create({
   backText: { color: '#0057FF', fontSize: 18, fontWeight: '600' },
   map: { flex: 1 },
   message: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10 },
-
-  bubble: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
-
-  halo: {
-    position: 'absolute', top: -8, left: -8, right: -8, bottom: -8,
-    backgroundColor: 'rgba(0, 87, 255, 0.22)',
-  },
-  clusterOuter: {
-    width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: '#FFFFFF', elevation: 4,
-  },
-  clusterInner: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#0057FF' },
-  clusterText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
-
-  pinOuter: {
-    width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center',
-    elevation: 4,
-  },
-  pinInner: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
-  pinSymbol: { fontSize: 18, textAlign: 'center' },
-
   card: { padding: 16, backgroundColor: '#FFFFFF', borderTopWidth: 1, borderColor: '#CBD5E1' },
   cardTitle: { fontSize: 18, fontWeight: '700', color: '#0F172A' },
   place: { marginTop: 6, color: '#475569' },

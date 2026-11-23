@@ -1,5 +1,6 @@
 import React from 'react';
 import { act, create } from 'react-test-renderer';
+import { TouchableOpacity } from 'react-native';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -53,7 +54,11 @@ test('al seleccionar un marcador presenta tipo, descripción y lugar del reporte
   obtenerReportesActivos.mockResolvedValue([item]);
   let tree;
   await act(async () => { tree = create(<MapScreen onBack={() => {}} />); });
-  const marker = tree.root.findByType('Marker');
+  const mapContainer = tree.root.find((node) => typeof node.props.onLayout === 'function');
+  act(() => mapContainer.props.onLayout({ nativeEvent: { layout: { width: 400, height: 800 } } }));
+  const marker = tree.root.findAllByType(TouchableOpacity)
+    .find((node) => node.props.accessibilityLabel === 'Reporte: Vías');
+  expect(marker).toBeDefined();
   act(() => marker.props.onPress());
   expect(visible(tree)).toContain('Vías');
   expect(visible(tree)).toContain('Hueco en la calzada');

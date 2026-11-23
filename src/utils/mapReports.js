@@ -31,8 +31,8 @@ export function crearMarcadores(reports = []) {
     });
 }
 
-export function agruparMarcadores(markers, zoom, bounds = [-180, -90, 180, 90]) {
-  if (!markers.length) return [];
+export function prepararClusteres(markers) {
+  if (!markers.length) return { index: null, markersById: new Map() };
   const features = markers.map((marker) => ({
     type: 'Feature',
     geometry: { type: 'Point', coordinates: [marker.lng, marker.lat] },
@@ -40,6 +40,11 @@ export function agruparMarcadores(markers, zoom, bounds = [-180, -90, 180, 90]) 
   }));
   const index = new Supercluster({ radius: 60, maxZoom: 20 });
   index.load(features);
+  return { index, markersById: new Map(markers.map((marker) => [marker.id, marker])) };
+}
+
+export function consultarClusteres({ index, markersById }, zoom, bounds = [-180, -90, 180, 90]) {
+  if (!index) return [];
   return index.getClusters(bounds, Math.max(0, Math.min(21, Math.floor(zoom)))).map((feature) => {
     const [lng, lat] = feature.geometry.coordinates;
     if (feature.properties.cluster) {
@@ -52,7 +57,11 @@ export function agruparMarcadores(markers, zoom, bounds = [-180, -90, 180, 90]) 
         expansionZoom: index.getClusterExpansionZoom(feature.properties.cluster_id),
       };
     }
-    const marker = markers.find((item) => item.id === feature.properties.id);
+    const marker = markersById.get(feature.properties.id);
     return { ...marker, isCluster: false, count: 1 };
   });
+}
+
+export function agruparMarcadores(markers, zoom, bounds = [-180, -90, 180, 90]) {
+  return consultarClusteres(prepararClusteres(markers), zoom, bounds);
 }
