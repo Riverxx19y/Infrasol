@@ -1,176 +1,61 @@
-import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { colors, styles } from '../auth/styles';
-import { cambiarEstadoReporte, listarReportesAdmin } from '../../services/adminReports.gateway';
+import { useAdminReports } from '../../hooks/useAdminReports';
 import { useAdminStats } from '../../hooks/useAdminStats';
-import { formatearApoyos, lugarDeReporte } from '../../utils/reportFormat';
-
-const SIGUIENTE_ESTADO = new Map([
-  ['Pendiente', 'En revisión'],
-  ['En revisión', 'Asignado'],
-  ['Asignado', 'Resuelto'],
-]);
-
-function Boton({ label, children, onPress, disabled, primary }) {
-  return (
-    <TouchableOpacity accessibilityRole="button" accessibilityLabel={label}
-      accessibilityState={{ disabled: !!disabled }} disabled={disabled}
-      onPress={onPress} style={primary ? styles.primaryButton : styles.secondaryButton}>
-      <Text style={primary ? styles.primaryText : styles.secondaryText}>{children || label}</Text>
-    </TouchableOpacity>
-  );
-}
-
-function ResumenAdmin({ resumen, cargando, error, consultar }) {
-  return (
-    <View style={panel.card}>
-      <Text accessibilityRole="header" style={panel.heading}>Estadísticas generales</Text>
-      {cargando && <View style={panel.loading}><ActivityIndicator /><Text>Cargando estadísticas…</Text></View>}
-      {error ? (
-        <>
-          <Text accessibilityRole="alert" style={styles.errorBox}>{error}</Text>
-          <Boton label="Reintentar estadísticas" onPress={consultar} />
-        </>
-      ) : null}
-      {resumen && (
-        <>
-          <Text style={panel.heading}>{`Total de reportes: ${resumen.total}`}</Text>
-          <Text>{`Tasa de resolución: ${resumen.tasaResolucion.toFixed(2).replace('.', ',')} %`}</Text>
-          {Object.entries(resumen.porEstado).map(([estado, cantidad]) => (
-            <Text key={estado}>{`${estado}: ${cantidad}`}</Text>
-          ))}
-          <Text accessibilityRole="header" style={panel.heading}>Por categoría</Text>
-          {Object.entries(resumen.porTipo).map(([tipo, cantidad]) => (
-            <Text key={tipo}>{`${tipo}: ${cantidad}`}</Text>
-          ))}
-          {resumen.total === 0 && <Text>No hay reportes para resumir.</Text>}
-          {resumen.topApoyados.length > 0 && (
-            <>
-              <Text accessibilityRole="header" style={panel.heading}>Reportes más apoyados</Text>
-              {resumen.topApoyados.map((reporte) => (
-                <View key={reporte.id} style={panel.destacado}>
-                  <Text style={panel.heading}>{reporte.descripcion || reporte.tipo}</Text>
-                  <Text>{`${reporte.tipo} · ${reporte.estado} · ${formatearApoyos(reporte.apoyos)}`}</Text>
-                </View>
-              ))}
-            </>
-          )}
-        </>
-      )}
-    </View>
-  );
-}
+import { lugarDeReporte } from '../../utils/reportFormat';
+import { siguienteEstadoReporte } from '../../utils/reportStatus';
+import AdminButton from './AdminButton';
+import ResumenAdmin from './AdminStatsSummary';
 
 export default function AdminScreen({ onSignOut }) {
   const estadisticas = useAdminStats();
-  const [reportes, setReportes] = useState([]);
-  const [cursor, setCursor] = useState(null);
-  const [cargando, setCargando] = useState(true);
-  const [actualizando, setActualizando] = useState(false);
-  const [seleccion, setSeleccion] = useState(null);
-  const [confirmando, setConfirmando] = useState(false);
-  const [error, setError] = useState('');
-  const [errorCarga, setErrorCarga] = useState(false);
-  const [conflicto, setConflicto] = useState(false);
-  const ocupado = useRef(false);
-
-  async function cargar(pagina) {
-    if (ocupado.current) return;
-    ocupado.current = true;
-    setCargando(true);
-    setError('');
-    setErrorCarga(false);
-    try {
-      const result = await listarReportesAdmin(pagina ? { cursor: pagina } : undefined);
-      setReportes((actuales) => pagina ? [...actuales, ...result.reportes] : result.reportes);
-      setCursor(result.cursor);
-      setConflicto(false);
-    } catch (cause) {
-      setErrorCarga(true);
-      setError(`No se pudieron cargar los reportes. ${cause?.message || 'Intenta de nuevo.'}`);
-    } finally {
-      ocupado.current = false;
-      setCargando(false);
-    }
-  }
-
-  useEffect(() => { cargar(); }, []);
-
-  function cerrarSelector() {
-    setSeleccion(null);
-    setConfirmando(false);
-  }
-
-  async function confirmarCambio() {
-    if (ocupado.current || !seleccion || !confirmando || conflicto) return;
-    const estadoNuevo = SIGUIENTE_ESTADO.get(seleccion.estado);
-    if (!estadoNuevo) return;
-    ocupado.current = true;
-    setActualizando(true);
-    setError('');
-    try {
-      const result = await cambiarEstadoReporte(seleccion.id, {
-        estadoNuevo, versionEstadoEsperada: seleccion.versionEstado ?? 0,
-      });
-      setReportes((actuales) => actuales.map((reporte) => reporte.id === seleccion.id
-        ? { ...reporte, estado: result.estado, versionEstado: result.versionEstado }
-        : reporte));
-      if (result.cambiado) estadisticas.consultar();
-    } catch (cause) {
-      setConflicto(cause?.status === 409);
-      setError(cause?.status === 409
-        ? `Conflicto de estado. ${cause.message || 'Recarga los reportes.'}`
-        : cause?.message || 'No se pudo actualizar el estado.');
-    } finally {
-      cerrarSelector();
-      ocupado.current = false;
-      setActualizando(false);
-    }
-  }
-
+  const {
+    reportes, cursor, seleccion, error, conflicto, errorCarga, cargando, actualizando,
+    cargar, seleccionar, prepararConfirmacion, cerrarSelector, confirmarCambio,
+  } = useAdminReports({ onCambioConfirmado: () => estadisticas.consultar({ forzar: true }) });
   const bloqueado = cargando || actualizando;
-  const siguiente = SIGUIENTE_ESTADO.get(seleccion?.estado);
 
   return (
     <ScrollView style={panel.screen} contentContainerStyle={panel.content}>
       <Text accessibilityRole="header" style={styles.title}>Panel de administración</Text>
-      <Boton label="Cerrar sesión" onPress={onSignOut} />
+      <AdminButton label="Cerrar sesión" onPress={onSignOut} />
       <ResumenAdmin {...estadisticas} />
       {cargando && <View style={panel.loading}><ActivityIndicator /><Text>Cargando reportes…</Text></View>}
       {error ? <Text accessibilityRole="alert" style={styles.errorBox}>{error}</Text> : null}
-      {(conflicto || errorCarga) && <Boton label="Recargar reportes" disabled={bloqueado} onPress={() => cargar()} />}
+      {(conflicto || errorCarga) && <AdminButton label="Recargar reportes" disabled={bloqueado} onPress={() => cargar()} />}
       {!cargando && !error && reportes.length === 0 && <Text>No hay reportes disponibles.</Text>}
       {reportes.map((reporte) => {
         const nombre = reporte.descripcion || reporte.tipo || reporte.id;
+        const siguiente = siguienteEstadoReporte(reporte.estado);
         return (
           <View key={reporte.id} style={panel.card}>
             <Text style={panel.heading}>{nombre}</Text>
             {reporte.tipo && reporte.tipo !== nombre && <Text>{reporte.tipo}</Text>}
             <Text>{lugarDeReporte(reporte)}</Text>
             <Text>Estado: {reporte.estado}</Text>
-            {SIGUIENTE_ESTADO.has(reporte.estado) && (
-              <Boton label={`Cambiar estado de ${nombre}`} disabled={bloqueado || conflicto || !!seleccion}
-                onPress={() => { setError(''); setSeleccion(reporte); }}>
+            {siguiente && (
+              <AdminButton label={`Cambiar estado de ${nombre}`} disabled={bloqueado || conflicto || !!seleccion}
+                onPress={() => seleccionar(reporte, siguiente)}>
                 Cambiar estado
-              </Boton>
+              </AdminButton>
             )}
-            {seleccion?.id === reporte.id && (
+            {seleccion?.reporte.id === reporte.id && (
               <View style={panel.selector}>
-                {confirmando ? (
+                {seleccion.confirmando ? (
                   <>
-                    <Text>{`¿Cambiar el estado a «${siguiente}»?`}</Text>
-                    <Boton label="Confirmar cambio de estado" primary disabled={actualizando} onPress={confirmarCambio}>
+                    <Text>{`¿Cambiar el estado a «${seleccion.estadoNuevo}»?`}</Text>
+                    <AdminButton label="Confirmar cambio de estado" primary disabled={actualizando} onPress={confirmarCambio}>
                       {actualizando ? 'Guardando cambio…' : 'Confirmar cambio de estado'}
-                    </Boton>
+                    </AdminButton>
                   </>
-                ) : <Boton label={siguiente} onPress={() => setConfirmando(true)} />}
-                <Boton label="Cancelar" disabled={actualizando} onPress={cerrarSelector} />
+                ) : <AdminButton label={seleccion.estadoNuevo} onPress={prepararConfirmacion} />}
+                <AdminButton label="Cancelar" disabled={actualizando} onPress={cerrarSelector} />
               </View>
             )}
           </View>
         );
       })}
-      {cursor && !conflicto && <Boton label="Cargar más reportes" disabled={bloqueado || !!seleccion} onPress={() => cargar(cursor)} />}
+      {cursor && !conflicto && <AdminButton label="Cargar más reportes" disabled={bloqueado || !!seleccion} onPress={() => cargar(cursor)} />}
     </ScrollView>
   );
 }
@@ -181,6 +66,5 @@ const panel = StyleSheet.create({
   card: { backgroundColor: colors.surface, padding: 16, borderRadius: 14, gap: 6 },
   heading: { color: colors.dark, fontSize: 16, fontWeight: '700' },
   selector: { marginTop: 12 },
-  destacado: { paddingTop: 8, gap: 3 },
   loading: { flexDirection: 'row', alignItems: 'center', gap: 8 },
 });

@@ -123,6 +123,18 @@ test('actualiza el resumen solo después de confirmar el cambio de estado', asyn
   expect(visible()).toMatch(/11[.,]11\s*%/);
 });
 
+test('dos pulsaciones de reintento mientras se consulta el resumen hacen una sola petición', async () => {
+  let terminar;
+  obtenerEstadisticasAdmin.mockRejectedValueOnce(new Error('Sin conexión'))
+    .mockImplementationOnce(() => new Promise((resolve) => { terminar = resolve; }));
+  await mount();
+  const reintentar = button('Reintentar estadísticas').props.onPress;
+  await act(async () => { reintentar(); reintentar(); });
+  expect(obtenerEstadisticasAdmin).toHaveBeenCalledTimes(2);
+  await act(async () => { terminar(resumen); });
+  expect(visible()).toMatch(/total(?: de reportes)?[:\s]+27/i);
+});
+
 test('cargar otra página conserva las filas y el resumen global', async () => {
   listarReportesAdmin.mockResolvedValueOnce({ reportes: [pagina], cursor: 'next' })
     .mockResolvedValueOnce({ reportes: [{ ...pagina, id: 'r2', descripcion: 'Segunda página' }], cursor: null });

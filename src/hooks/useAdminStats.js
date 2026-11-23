@@ -6,11 +6,12 @@ export function useAdminStats() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const montado = useRef(false);
-  const ultimaConsulta = useRef(0);
+  const enCurso = useRef(null);
 
-  const consultar = useCallback(async () => {
-    if (!montado.current) return;
-    const consulta = ++ultimaConsulta.current;
+  const consultar = useCallback(async ({ forzar = false } = {}) => {
+    if (!montado.current || (enCurso.current && !forzar)) return;
+    const consulta = {};
+    enCurso.current = consulta;
     setCargando(true);
     setError('');
     try {
@@ -19,13 +20,16 @@ export function useAdminStats() {
           || !datos.porEstado || !datos.porTipo || !Array.isArray(datos.topApoyados)) {
         throw new Error('El servidor devolvió un resumen inválido.');
       }
-      if (consulta === ultimaConsulta.current) setResumen(datos);
+      if (enCurso.current === consulta) setResumen(datos);
     } catch (cause) {
-      if (consulta === ultimaConsulta.current) {
+      if (enCurso.current === consulta) {
         setError(`No se pudieron cargar las estadísticas. ${cause?.message || 'Intenta de nuevo.'}`);
       }
     } finally {
-      if (consulta === ultimaConsulta.current) setCargando(false);
+      if (enCurso.current === consulta) {
+        enCurso.current = null;
+        setCargando(false);
+      }
     }
   }, []);
 
@@ -34,7 +38,7 @@ export function useAdminStats() {
     consultar();
     return () => {
       montado.current = false;
-      ultimaConsulta.current++;
+      enCurso.current = null;
     };
   }, [consultar]);
 
