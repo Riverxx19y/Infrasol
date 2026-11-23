@@ -13,6 +13,7 @@ import StartScreen from '../screens/StartScreen';
 import AdminScreen from '../screens/admin/AdminScreen';
 import CreateReportScreen from '../screens/reports/CreateReportScreen';
 import MapScreen from '../screens/map/MapScreen';
+import MyReportsScreen from '../screens/reports/MyReportsScreen';
 
 export default function RootNavigator() {
   const [user, setUser] = useState(undefined);
@@ -20,6 +21,7 @@ export default function RootNavigator() {
   const [authMode, setAuthMode] = useState('register');
   const [showCreateReport, setShowCreateReport] = useState(false);
   const [showMap, setShowMap] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   async function handleSignOut() {
     await signOut(auth);
@@ -36,6 +38,7 @@ export default function RootNavigator() {
       setUser(currentUser);
       setShowCreateReport(false);
       setShowMap(false);
+      setShowHistory(false);
       setProfile(currentUser ? undefined : null);
       if (currentUser) {
         stopProfile = onSnapshot(
@@ -72,7 +75,15 @@ export default function RootNavigator() {
   if (profile?.rol === 'ciudadano') {
     if (showCreateReport) return <CreateReportScreen user={user} onBack={() => setShowCreateReport(false)} />;
     if (showMap) return <MapScreen onBack={() => setShowMap(false)} />;
-    return <StartScreen onSignOut={handleSignOut} onCreateReport={() => setShowCreateReport(true)} onOpenMap={() => setShowMap(true)} />;
+    if (showHistory) return <MyReportsScreen onBack={() => setShowHistory(false)} />;
+    return (
+      <StartScreen
+        onSignOut={handleSignOut}
+        onCreateReport={() => setShowCreateReport(true)}
+        onOpenMap={() => setShowMap(true)}
+        onOpenHistory={() => setShowHistory(true)}
+      />
+    );
   }
   return <RestrictedAccessScreen onSignOut={handleSignOut} />;
 }
