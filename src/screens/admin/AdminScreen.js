@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { colors, styles } from '../auth/styles';
 import { cambiarEstadoReporte, listarReportesAdmin } from '../../services/adminReports.gateway';
-import { lugarDeReporte } from '../../utils/reportFormat';
+import { useAdminStats } from '../../hooks/useAdminStats';
+import { formatearApoyos, lugarDeReporte } from '../../utils/reportFormat';
 
 const SIGUIENTE_ESTADO = new Map([
   ['Pendiente', 'En revisión'],
@@ -20,7 +21,48 @@ function Boton({ label, children, onPress, disabled, primary }) {
   );
 }
 
+function ResumenAdmin({ resumen, cargando, error, consultar }) {
+  return (
+    <View style={panel.card}>
+      <Text accessibilityRole="header" style={panel.heading}>Estadísticas generales</Text>
+      {cargando && <View style={panel.loading}><ActivityIndicator /><Text>Cargando estadísticas…</Text></View>}
+      {error ? (
+        <>
+          <Text accessibilityRole="alert" style={styles.errorBox}>{error}</Text>
+          <Boton label="Reintentar estadísticas" onPress={consultar} />
+        </>
+      ) : null}
+      {resumen && (
+        <>
+          <Text style={panel.heading}>{`Total de reportes: ${resumen.total}`}</Text>
+          <Text>{`Tasa de resolución: ${resumen.tasaResolucion.toFixed(2).replace('.', ',')} %`}</Text>
+          {Object.entries(resumen.porEstado).map(([estado, cantidad]) => (
+            <Text key={estado}>{`${estado}: ${cantidad}`}</Text>
+          ))}
+          <Text accessibilityRole="header" style={panel.heading}>Por categoría</Text>
+          {Object.entries(resumen.porTipo).map(([tipo, cantidad]) => (
+            <Text key={tipo}>{`${tipo}: ${cantidad}`}</Text>
+          ))}
+          {resumen.total === 0 && <Text>No hay reportes para resumir.</Text>}
+          {resumen.topApoyados.length > 0 && (
+            <>
+              <Text accessibilityRole="header" style={panel.heading}>Reportes más apoyados</Text>
+              {resumen.topApoyados.map((reporte) => (
+                <View key={reporte.id} style={panel.destacado}>
+                  <Text style={panel.heading}>{reporte.descripcion || reporte.tipo}</Text>
+                  <Text>{`${reporte.tipo} · ${reporte.estado} · ${formatearApoyos(reporte.apoyos)}`}</Text>
+                </View>
+              ))}
+            </>
+          )}
+        </>
+      )}
+    </View>
+  );
+}
+
 export default function AdminScreen({ onSignOut }) {
+  const estadisticas = useAdminStats();
   const [reportes, setReportes] = useState([]);
   const [cursor, setCursor] = useState(null);
   const [cargando, setCargando] = useState(true);
@@ -73,6 +115,7 @@ export default function AdminScreen({ onSignOut }) {
       setReportes((actuales) => actuales.map((reporte) => reporte.id === seleccion.id
         ? { ...reporte, estado: result.estado, versionEstado: result.versionEstado }
         : reporte));
+      if (result.cambiado) estadisticas.consultar();
     } catch (cause) {
       setConflicto(cause?.status === 409);
       setError(cause?.status === 409
@@ -92,6 +135,7 @@ export default function AdminScreen({ onSignOut }) {
     <ScrollView style={panel.screen} contentContainerStyle={panel.content}>
       <Text accessibilityRole="header" style={styles.title}>Panel de administración</Text>
       <Boton label="Cerrar sesión" onPress={onSignOut} />
+      <ResumenAdmin {...estadisticas} />
       {cargando && <View style={panel.loading}><ActivityIndicator /><Text>Cargando reportes…</Text></View>}
       {error ? <Text accessibilityRole="alert" style={styles.errorBox}>{error}</Text> : null}
       {(conflicto || errorCarga) && <Boton label="Recargar reportes" disabled={bloqueado} onPress={() => cargar()} />}
@@ -137,5 +181,6 @@ const panel = StyleSheet.create({
   card: { backgroundColor: colors.surface, padding: 16, borderRadius: 14, gap: 6 },
   heading: { color: colors.dark, fontSize: 16, fontWeight: '700' },
   selector: { marginTop: 12 },
+  destacado: { paddingTop: 8, gap: 3 },
   loading: { flexDirection: 'row', alignItems: 'center', gap: 8 },
 });

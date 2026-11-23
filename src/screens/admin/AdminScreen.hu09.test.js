@@ -7,6 +7,8 @@ import { TouchableOpacity } from 'react-native';
 // Usa un módulo virtual solo hasta que GREEN cree el gateway.
 jest.doMock('../../services/adminReports.gateway', () => ({
   cambiarEstadoReporte: jest.fn(), listarReportesAdmin: jest.fn(),
+  // La carga del resumen se prueba en HU-08; esta suite observa la lista.
+  obtenerEstadisticasAdmin: () => new Promise(() => {}),
 }), { virtual: !existsSync(join(__dirname, '../../services/adminReports.gateway.js')) });
 const { cambiarEstadoReporte, listarReportesAdmin } = require('../../services/adminReports.gateway');
 const AdminScreen = require('./AdminScreen').default;
