@@ -1,19 +1,16 @@
-import { collection, getDocs, limit, orderBy, query, startAfter, where } from 'firebase/firestore';
-import { db } from '../../config/firebase';
+import { where } from 'firebase/firestore';
+import { consultarPaginaReportes } from './reportesPage';
 
-const PAGE_SIZE = 25;
-
+// El mapa necesita todos los reportes activos: recorre las páginas hasta agotarlas.
 export async function obtenerReportesActivos() {
-  const reports = [];
-  let cursor;
+  const reportes = [];
+  let cursor = null;
+  let hayMas = true;
 
-  while (true) {
-    const constraints = [where('estado', '==', 'Pendiente'), orderBy('fecha', 'desc'), limit(PAGE_SIZE)];
-    if (cursor) constraints.push(startAfter(cursor));
-    const page = await getDocs(query(collection(db, 'reportes'), ...constraints));
-
-    for (const document of page.docs) reports.push({ id: document.id, ...document.data() });
-    if (page.docs.length < PAGE_SIZE) return reports;
-    cursor = page.docs[page.docs.length - 1];
+  while (hayMas) {
+    const page = await consultarPaginaReportes([where('estado', '==', 'Pendiente')], cursor);
+    reportes.push(...page.reportes);
+    ({ cursor, hayMas } = page);
   }
+  return reportes;
 }
