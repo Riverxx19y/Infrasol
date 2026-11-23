@@ -7,7 +7,7 @@ import { apoyarReporte } from '../../services/apoyos.gateway';
 
 jest.mock('../../../config/firebase', () => ({ auth: { currentUser: { uid: 'ciudadano-1' } } }));
 jest.mock('../../services/mapReports.service', () => ({ obtenerReportesActivos: jest.fn() }));
-jest.mock('../../services/apoyos.gateway', () => ({ apoyarReporte: jest.fn() }), { virtual: true });
+jest.mock('../../services/apoyos.gateway', () => ({ apoyarReporte: jest.fn() }));
 jest.mock('react-native-maps', () => ({ __esModule: true, default: 'MapView' }));
 
 global.IS_REACT_ACT_ENVIRONMENT = true;

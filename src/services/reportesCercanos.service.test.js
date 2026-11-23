@@ -6,7 +6,7 @@ import { esCandidatoCercano } from '../utils/geo';
 
 jest.mock('firebase/firestore', () => ({ where: jest.fn((...args) => ({ where: args })) }));
 jest.mock('./reportesPage', () => ({ consultarPaginaReportes: jest.fn() }));
-jest.mock('../utils/geo', () => ({ esCandidatoCercano: jest.fn() }), { virtual: true });
+jest.mock('../utils/geo', () => ({ esCandidatoCercano: jest.fn() }));
 
 const implementation = existsSync(join(__dirname, 'reportesCercanos.service.js'))
   ? require('./reportesCercanos.service') : {};

@@ -4,6 +4,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { obtenerUbicacionActual } from '../../services/location.service';
 import { subirFoto } from '../../services/photo.service';
 import { crearReporte } from '../../services/reports.service';
+import { buscarReportesCercanos } from '../../services/reportesCercanos.service';
+import { apoyarReporte } from '../../services/apoyos.gateway';
 
 const TIPOS = ['Alumbrado', 'Vías', 'Alcantarillado', 'Basuras', 'Zonas verdes', 'Otro'];
 
@@ -16,14 +18,29 @@ export default function CreateReportScreen({ user, onBack, onCreated }) {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [cercanos, setCercanos] = useState([]);
+  const [supporting, setSupporting] = useState(false);
   const sendingRef = useRef(false);
+  const supportingRef = useRef(false);
+  const nearbyCacheRef = useRef(null);
 
   async function capturarUbicacion() {
     if (gpsLoading || sendingRef.current) return;
     setGpsLoading(true);
     setError('');
     try {
-      setUbicacion(await obtenerUbicacionActual());
+      const location = await obtenerUbicacionActual();
+      setUbicacion(location);
+      setCercanos([]);
+      nearbyCacheRef.current = null;
+      if (tipo && user?.uid) {
+        const reportes = await buscarReportesCercanos({
+          tipo, lat: location.latitude, lng: location.longitude, uid: user.uid,
+        });
+        nearbyCacheRef.current = {
+          tipo, lat: location.latitude, lng: location.longitude, uid: user.uid, reportes,
+        };
+      }
     } catch (cause) {
       setUbicacion(null);
       setError(cause?.message || 'No se pudo obtener la ubicación.');
@@ -70,7 +87,26 @@ export default function CreateReportScreen({ user, onBack, onCreated }) {
     }
   }
 
-  async function enviar(sinFoto = false) {
+  async function apoyarCercano(reporte) {
+    if (supportingRef.current) return;
+    supportingRef.current = true;
+    setSupporting(true);
+    setError('');
+    setSuccess('');
+    try {
+      const result = await apoyarReporte(reporte.id);
+      setCercanos((items) => items.map((item) => item.id === reporte.id ? { ...item, apoyos: result.apoyos } : item));
+      setSuccess(result.apoyado ? `Apoyo registrado. ${result.apoyos} apoyos.`
+        : `Ya apoyaste este reporte. ${result.apoyos} apoyos.`);
+    } catch (cause) {
+      setError(cause?.message || 'No se pudo comunicar con el servidor de apoyos.');
+    } finally {
+      supportingRef.current = false;
+      setSupporting(false);
+    }
+  }
+
+  async function enviar(sinFoto = false, continuar = false) {
     if (sendingRef.current) return;
     setSuccess('');
     if (!tipo) { setError('Selecciona un tipo de reporte.'); return; }
@@ -82,6 +118,17 @@ export default function CreateReportScreen({ user, onBack, onCreated }) {
     setSending(true);
     setError('');
     try {
+      if (!continuar) {
+        const cached = nearbyCacheRef.current;
+        const encontrados = cached?.tipo === tipo && cached.lat === ubicacion.latitude
+          && cached.lng === ubicacion.longitude && cached.uid === user.uid
+          ? cached.reportes
+          : await buscarReportesCercanos({
+            tipo, lat: ubicacion.latitude, lng: ubicacion.longitude, uid: user.uid,
+          });
+        setCercanos(encontrados);
+        if (encontrados.length) return;
+      }
       let fotoUrl = null;
       if (photo?.base64 && !sinFoto) {
         try {
@@ -89,7 +136,7 @@ export default function CreateReportScreen({ user, onBack, onCreated }) {
         } catch (cause) {
           Alert.alert('Error al subir foto', `${cause?.message || 'No se pudo subir la fotografía.'} ¿Enviar el reporte sin foto?`, [
             { text: 'Cancelar', style: 'cancel' },
-            { text: 'Enviar sin foto', onPress: () => enviar(true) },
+            { text: 'Enviar sin foto', onPress: () => enviar(true, true) },
           ]);
           return;
         }
@@ -126,7 +173,7 @@ export default function CreateReportScreen({ user, onBack, onCreated }) {
           <TouchableOpacity
             key={option} accessibilityRole="button" accessibilityLabel={option}
             accessibilityState={{ selected: tipo === option }}
-            onPress={() => { setTipo(option); setError(''); }}
+            onPress={() => { setTipo(option); setCercanos([]); nearbyCacheRef.current = null; setError(''); }}
             style={[styles.type, tipo === option && styles.typeSelected]}
           >
             <Text style={[styles.typeText, tipo === option && styles.typeTextSelected]}>{option}</Text>
@@ -169,6 +216,26 @@ export default function CreateReportScreen({ user, onBack, onCreated }) {
       {error ? <View accessibilityRole="alert" style={styles.errorBox}><Text style={styles.errorText}>{error}</Text></View> : null}
       {success ? <View accessibilityRole="alert" style={styles.successBox}><Text style={styles.successText}>{success}</Text></View> : null}
 
+      {cercanos.length > 0 && (
+        <View style={styles.locationBox}>
+          <Text style={styles.label}>Reportes cercanos de la misma categoría</Text>
+          {cercanos.map((reporte) => (
+            <View key={reporte.id} style={styles.nearbyItem}>
+              <Text>{reporte.descripcion || reporte.tipo}</Text>
+              <Text>{reporte.apoyos || 0} apoyos</Text>
+              <TouchableOpacity accessibilityRole="button" accessibilityLabel="Apoyar reporte cercano"
+                disabled={supporting} onPress={() => apoyarCercano(reporte)} style={styles.actionButton}>
+                <Text style={styles.actionText}>Apoyar reporte cercano</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Continuar creando reporte"
+            disabled={sending} onPress={() => enviar(false, true)} style={styles.actionButton}>
+            <Text style={styles.actionText}>El problema es distinto; crear reporte</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       <TouchableOpacity
         accessibilityRole="button" accessibilityLabel="Crear reporte"
         accessibilityState={{ disabled: sending }} disabled={sending}
@@ -200,6 +267,7 @@ const styles = StyleSheet.create({
   locationText: { color: '#14532D', fontWeight: '600' },
   coordinates: { color: '#475569', marginTop: 4 },
   photoPreview: { width: '100%', height: 200, borderRadius: 12, marginTop: 10 },
+  nearbyItem: { paddingVertical: 12, gap: 8, borderBottomWidth: 1, borderColor: '#CBD5E1' },
   errorBox: { backgroundColor: '#FEE2E2', borderRadius: 10, padding: 12, marginTop: 18 },
   errorText: { color: '#991B1B' },
   successBox: { backgroundColor: '#DCFCE7', borderRadius: 10, padding: 12, marginTop: 18 },
