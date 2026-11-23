@@ -37,6 +37,10 @@ export function listarReportesAdmin({ cursor } = {}) {
   return request(cursor ? `?cursor=${encodeURIComponent(cursor)}` : '', 'GET');
 }
 
+export function obtenerEstadisticasAdmin() {
+  return request('/estadisticas', 'GET');
+}
+
 export function cambiarEstadoReporte(reporteId, { estadoNuevo, versionEstadoEsperada }) {
   return request(`/${encodeURIComponent(reporteId)}/estado`, 'PATCH', { estadoNuevo, versionEstadoEsperada });
 }
