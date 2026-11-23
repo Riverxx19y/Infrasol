@@ -4,6 +4,9 @@ import * as ImagePicker from 'expo-image-picker';
 import { obtenerUbicacionActual } from '../../services/location.service';
 import { subirFoto } from '../../services/photo.service';
 import { crearReporte } from '../../services/reports.service';
+import { buscarReportesCercanos } from '../../services/reportesCercanos.service';
+import { apoyarReporte } from '../../services/apoyos.gateway';
+import { formatearApoyos, lugarDeReporte, mensajeDeApoyo } from '../../utils/reportFormat';
 
 const TIPOS = ['Alumbrado', 'Vías', 'Alcantarillado', 'Basuras', 'Zonas verdes', 'Otro'];
 
@@ -16,12 +19,18 @@ export default function CreateReportScreen({ user, onBack, onCreated }) {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [cercanos, setCercanos] = useState([]);
+  const [detalleCercano, setDetalleCercano] = useState(null);
+  const [supporting, setSupporting] = useState(false);
   const sendingRef = useRef(false);
+  const supportingRef = useRef(false);
 
   async function capturarUbicacion() {
-    if (gpsLoading || sendingRef.current) return;
+    if (gpsLoading || sendingRef.current || supportingRef.current) return;
     setGpsLoading(true);
     setError('');
+    setCercanos([]);
+    setDetalleCercano(null);
     try {
       setUbicacion(await obtenerUbicacionActual());
     } catch (cause) {
@@ -70,8 +79,26 @@ export default function CreateReportScreen({ user, onBack, onCreated }) {
     }
   }
 
-  async function enviar(sinFoto = false) {
-    if (sendingRef.current) return;
+  async function apoyarCercano(reporte) {
+    if (supportingRef.current) return;
+    supportingRef.current = true;
+    setSupporting(true);
+    setError('');
+    setSuccess('');
+    try {
+      const result = await apoyarReporte(reporte.id);
+      setCercanos((items) => items.map((item) => item.id === reporte.id ? { ...item, apoyos: result.apoyos } : item));
+      setSuccess(mensajeDeApoyo(result));
+    } catch (cause) {
+      setError(cause?.message || 'No se pudo comunicar con el servidor de apoyos.');
+    } finally {
+      supportingRef.current = false;
+      setSupporting(false);
+    }
+  }
+
+  async function enviar(sinFoto = false, continuar = false) {
+    if (sendingRef.current || gpsLoading || supportingRef.current) return;
     setSuccess('');
     if (!tipo) { setError('Selecciona un tipo de reporte.'); return; }
     if (!descripcion.trim()) { setError('Escribe una descripción del problema.'); return; }
@@ -82,6 +109,21 @@ export default function CreateReportScreen({ user, onBack, onCreated }) {
     setSending(true);
     setError('');
     try {
+      if (!continuar) {
+        setCercanos([]);
+        setDetalleCercano(null);
+        let encontrados;
+        try {
+          encontrados = await buscarReportesCercanos({
+            tipo, lat: ubicacion.latitude, lng: ubicacion.longitude, uid: user.uid,
+          });
+        } catch {
+          setError('No se pudieron consultar los reportes cercanos. Comprueba la conexión e intenta de nuevo.');
+          return;
+        }
+        setCercanos(encontrados);
+        if (encontrados.length) return;
+      }
       let fotoUrl = null;
       if (photo?.base64 && !sinFoto) {
         try {
@@ -89,7 +131,7 @@ export default function CreateReportScreen({ user, onBack, onCreated }) {
         } catch (cause) {
           Alert.alert('Error al subir foto', `${cause?.message || 'No se pudo subir la fotografía.'} ¿Enviar el reporte sin foto?`, [
             { text: 'Cancelar', style: 'cancel' },
-            { text: 'Enviar sin foto', onPress: () => enviar(true) },
+            { text: 'Enviar sin foto', onPress: () => enviar(true, continuar) },
           ]);
           return;
         }
@@ -101,6 +143,8 @@ export default function CreateReportScreen({ user, onBack, onCreated }) {
         fotoUrl,
       });
       setSuccess('Reporte creado exitosamente.');
+      setCercanos([]);
+      setDetalleCercano(null);
       onCreated?.(id);
     } catch (cause) {
       setError(cause?.message || 'No se pudo crear el reporte. Intenta de nuevo.');
@@ -126,7 +170,8 @@ export default function CreateReportScreen({ user, onBack, onCreated }) {
           <TouchableOpacity
             key={option} accessibilityRole="button" accessibilityLabel={option}
             accessibilityState={{ selected: tipo === option }}
-            onPress={() => { setTipo(option); setError(''); }}
+            disabled={sending || gpsLoading || supporting}
+            onPress={() => { setTipo(option); setCercanos([]); setDetalleCercano(null); setError(''); }}
             style={[styles.type, tipo === option && styles.typeSelected]}
           >
             <Text style={[styles.typeText, tipo === option && styles.typeTextSelected]}>{option}</Text>
@@ -138,7 +183,7 @@ export default function CreateReportScreen({ user, onBack, onCreated }) {
       <TextInput
         accessibilityLabel="Descripción" multiline
         placeholder="Describe el problema y una referencia útil"
-        value={descripcion} onChangeText={setDescripcion}
+        value={descripcion} onChangeText={setDescripcion} editable={!sending}
         style={styles.description}
         textAlignVertical="top"
       />
@@ -169,9 +214,37 @@ export default function CreateReportScreen({ user, onBack, onCreated }) {
       {error ? <View accessibilityRole="alert" style={styles.errorBox}><Text style={styles.errorText}>{error}</Text></View> : null}
       {success ? <View accessibilityRole="alert" style={styles.successBox}><Text style={styles.successText}>{success}</Text></View> : null}
 
+      {cercanos.length > 0 && (
+        <View style={styles.locationBox}>
+          <Text style={styles.label}>Reportes cercanos de la misma categoría</Text>
+          {cercanos.map((reporte, index) => (
+            <View key={reporte.id} style={styles.nearbyItem}>
+              {reporte.usuarioId === user?.uid && <Text>Ya reportaste esta deficiencia</Text>}
+              <Text>{reporte.descripcion || reporte.tipo}</Text>
+              <Text>{formatearApoyos(reporte.apoyos ?? 0)}</Text>
+              <TouchableOpacity accessibilityRole="button" accessibilityLabel={`Ver reporte cercano ${index + 1}`}
+                onPress={() => setDetalleCercano(detalleCercano === reporte.id ? null : reporte.id)} style={styles.actionButton}>
+                <Text style={styles.actionText}>{detalleCercano === reporte.id ? 'Ocultar detalle' : 'Ver reporte'}</Text>
+              </TouchableOpacity>
+              {detalleCercano === reporte.id && <Text>{lugarDeReporte(reporte)} · {reporte.estado}</Text>}
+              {reporte.usuarioId !== user?.uid && (
+                <TouchableOpacity accessibilityRole="button" accessibilityLabel="Apoyar reporte cercano"
+                  disabled={supporting || sending} onPress={() => apoyarCercano(reporte)} style={styles.actionButton}>
+                  <Text style={styles.actionText}>Apoyar reporte existente</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          ))}
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Continuar creando reporte"
+            disabled={sending || supporting} onPress={() => enviar(false, true)} style={styles.actionButton}>
+            <Text style={styles.actionText}>El problema es distinto; crear reporte</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       <TouchableOpacity
         accessibilityRole="button" accessibilityLabel="Crear reporte"
-        accessibilityState={{ disabled: sending }} disabled={sending}
+        accessibilityState={{ disabled: sending || gpsLoading || supporting }} disabled={sending || gpsLoading || supporting}
         onPress={() => enviar()} style={[styles.submit, sending && styles.submitDisabled]}
       >
         {sending ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.submitText}>Crear reporte</Text>}
@@ -200,6 +273,7 @@ const styles = StyleSheet.create({
   locationText: { color: '#14532D', fontWeight: '600' },
   coordinates: { color: '#475569', marginTop: 4 },
   photoPreview: { width: '100%', height: 200, borderRadius: 12, marginTop: 10 },
+  nearbyItem: { paddingVertical: 12, gap: 8, borderBottomWidth: 1, borderColor: '#CBD5E1' },
   errorBox: { backgroundColor: '#FEE2E2', borderRadius: 10, padding: 12, marginTop: 18 },
   errorText: { color: '#991B1B' },
   successBox: { backgroundColor: '#DCFCE7', borderRadius: 10, padding: 12, marginTop: 18 },
