@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { cambiarEstadoReporte, listarReportesAdmin } from '../services/adminReports.gateway';
 
-export function useAdminReports() {
+export function useAdminReports({ onCambioConfirmado } = {}) {
   const [reportes, setReportes] = useState([]);
   const [cursor, setCursor] = useState(null);
   const [operacion, setOperacion] = useState('carga');
@@ -54,12 +54,13 @@ export function useAdminReports() {
     setOperacion('cambio');
     setError('');
     try {
-      const { estado, versionEstado } = await cambiarEstadoReporte(reporte.id, {
+      const { estado, versionEstado, cambiado } = await cambiarEstadoReporte(reporte.id, {
         estadoNuevo, versionEstadoEsperada: reporte.versionEstado ?? 0,
       });
       setReportes((actuales) => actuales.map((actual) => actual.id === reporte.id
         ? { ...actual, estado, versionEstado }
         : actual));
+      if (cambiado) onCambioConfirmado?.();
     } catch (cause) {
       const esConflicto = cause?.status === 409;
       setConflicto(esConflicto);
