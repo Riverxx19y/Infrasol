@@ -64,6 +64,21 @@ test('solo ofrece el siguiente estado y lo muestra tras confirmar y recibir resp
   expect(visible(tree)).not.toContain('Pendiente');
 });
 
+test('dos confirmaciones en el mismo turno envían un solo cambio', async () => {
+  let finish;
+  cambiarEstadoReporte.mockImplementationOnce(() => new Promise((resolve) => { finish = resolve; }));
+  await mount();
+  await press(tree, 'Cambiar estado de Luminaria apagada');
+  await press(tree, 'En revisión');
+  const confirm = button(tree, 'Confirmar cambio de estado').props.onPress;
+  act(() => { confirm(); confirm(); });
+  expect(cambiarEstadoReporte).toHaveBeenCalledTimes(1);
+  expect(button(tree, 'Confirmar cambio de estado').props.disabled).toBe(true);
+  expect(visible(tree)).toContain('Pendiente');
+  await act(async () => { finish({ cambiado: true, estado: 'En revisión', versionEstado: 1 }); });
+  expect(visible(tree)).toContain('En revisión');
+});
+
 test('un reporte resuelto carece de acción para cambiar su estado', async () => {
   listarReportesAdmin.mockResolvedValueOnce(page([{ ...original, estado: 'Resuelto', versionEstado: 3 }]));
   await mount();

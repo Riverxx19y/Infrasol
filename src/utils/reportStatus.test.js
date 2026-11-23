@@ -4,6 +4,12 @@ import { join } from 'node:path';
 // La ausencia del archivo es el fallo RED esperado; otros errores de importación siguen visibles.
 const implementation = existsSync(join(__dirname, 'reportStatus.js')) ? require('./reportStatus') : {};
 const estiloEstado = implementation.estiloEstado;
+const siguienteEstadoReporte = implementation.siguienteEstadoReporte;
+
+test('el selector ofrece un solo paso para cada estado y ninguno para Resuelto o valores desconocidos', () => {
+  expect(['Pendiente', 'En revisión', 'Asignado', 'Resuelto', 'Cerrado'].map(siguienteEstadoReporte))
+    .toEqual(['En revisión', 'Asignado', 'Resuelto', undefined, undefined]);
+});
 
 const PENDIENTE = { fondo: '#FFF4D6', texto: '#B07D00' };
 const RESUELTO = { fondo: '#D6FFF0', texto: '#008A5A' };
