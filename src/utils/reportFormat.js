@@ -2,6 +2,10 @@ export const SIN_DIRECCION = 'Ubicación sin dirección';
 
 export const lugarDeReporte = (reporte) => reporte?.lugar || SIN_DIRECCION;
 
+export function formatearTasaResolucion(tasa) {
+  return `${tasa.toFixed(2).replace('.', ',')} %`;
+}
+
 export function formatearApoyos(cantidad = 0) {
   return `${cantidad} ${cantidad === 1 ? 'apoyo' : 'apoyos'}`;
 }
