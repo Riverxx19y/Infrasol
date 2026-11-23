@@ -4,6 +4,16 @@ const ESTILOS = {
 };
 const NEUTRAL = { fondo: '#F1F5F9', texto: '#64748B' };
 
+const SIGUIENTE_ESTADO = new Map([
+  ['Pendiente', 'En revisión'],
+  ['En revisión', 'Asignado'],
+  ['Asignado', 'Resuelto'],
+]);
+
+export function siguienteEstadoReporte(estado) {
+  return SIGUIENTE_ESTADO.get(estado);
+}
+
 // Estilo visual de la etiqueta de estado de un reporte. Solo "Pendiente" y "Resuelto"
 // tienen color propio; cualquier otro valor usa el estilo neutral con su texto real.
 export function estiloEstado(estado) {
