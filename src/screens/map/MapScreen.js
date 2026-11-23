@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import MapView from 'react-native-maps';
 import ReportBubble, { bubbleSize } from '../../components/map/ReportBubble';
 import { obtenerReportesActivos } from '../../services/mapReports.service';
 import { mapZoom, project, viewport } from '../../utils/mapGeometry';
-import { consultarClusteres, crearMarcadores, prepararClusteres } from '../../utils/mapReports';
-import { lugarDeReporte } from '../../utils/reportFormat';
+import { consultarClusteres, crearMarcadores, MAX_CLUSTER_ZOOM, obtenerMiembrosCluster, prepararClusteres } from '../../utils/mapReports';
+import { formatearApoyos, lugarDeReporte, mensajeDeApoyo } from '../../utils/reportFormat';
 import { auth } from '../../../config/firebase';
 import { apoyarReporte } from '../../services/apoyos.gateway';
 
@@ -24,6 +24,7 @@ export default function MapScreen({ onBack }) {
   const [liveRegion, setLiveRegion] = useState(DEFAULT_REGION); // para posicionar (durante el gesto)
   const [mapSize, setMapSize] = useState({ width: 0, height: 0 });
   const [selected, setSelected] = useState(null);
+  const [clusterIds, setClusterIds] = useState([]);
   const [supportMessage, setSupportMessage] = useState('');
   const [supporting, setSupporting] = useState(false);
   const supportingRef = useRef(false);
@@ -37,7 +38,7 @@ export default function MapScreen({ onBack }) {
       const { apoyado, apoyos } = await apoyarReporte(selected.id);
       setSelected((current) => current?.id === selected.id ? { ...current, apoyos } : current);
       setReports((items) => items.map((item) => item.id === selected.id ? { ...item, apoyos } : item));
-      setSupportMessage(apoyado ? `Apoyo registrado. ${apoyos} apoyos.` : `Ya apoyaste este reporte. ${apoyos} apoyos.`);
+      setSupportMessage(mensajeDeApoyo({ apoyado, apoyos }));
     } catch (cause) {
       setSupportMessage(cause?.message || 'No se pudo comunicar con el servidor de apoyos.');
     } finally {
@@ -70,17 +71,22 @@ export default function MapScreen({ onBack }) {
   const markers = useMemo(() => crearMarcadores(reports), [reports]);
   const preparedClusters = useMemo(() => prepararClusteres(markers), [markers]);
   const groups = useMemo(
-    () => consultarClusteres(preparedClusters, mapZoom(region), viewport(region)),
+    // Conserva los clústeres del último nivel aunque el mapa permita acercarse más.
+    () => consultarClusteres(preparedClusters, Math.min(mapZoom(region), MAX_CLUSTER_ZOOM), viewport(region)),
     [preparedClusters, region],
   );
 
   function expand(group) {
-    const delta = 360 / (2 ** Math.max(group.expansionZoom, mapZoom(region) + 1));
-    mapRef.current?.animateToRegion(
+    setClusterIds(obtenerMiembrosCluster(preparedClusters, group));
+    setSelected(null);
+    const zoom = mapZoom(region);
+    const targetZoom = Math.min(group.expansionZoom, 21);
+    if (targetZoom <= zoom) return;
+    const delta = 360 / (2 ** targetZoom);
+    mapRef.current?.animateToRegion?.(
       { latitude: group.lat, longitude: group.lng, latitudeDelta: delta, longitudeDelta: delta },
       300,
     );
-    setSelected(null);
   }
 
   return (
@@ -105,7 +111,7 @@ export default function MapScreen({ onBack }) {
             showsBuildings={false}
             onRegionChange={setLiveRegion}
             onRegionChangeComplete={(r) => { setRegion(r); setLiveRegion(r); }}
-            onPress={() => setSelected(null)}
+            onPress={() => { setSelected(null); setClusterIds([]); }}
           />
           {mapSize.width > 0 && (
             <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
@@ -123,7 +129,7 @@ export default function MapScreen({ onBack }) {
                     onPress={() => {
                       setSupportMessage('');
                       if (group.isCluster) expand(group);
-                      else setSelected(group);
+                      else { setClusterIds([]); setSelected(group); }
                     }}
                   />
                 );
@@ -132,13 +138,36 @@ export default function MapScreen({ onBack }) {
           )}
         </View>
       )}
+      {clusterIds.length > 0 && !selected && (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Reportes del clúster</Text>
+          <ScrollView style={styles.clusterList}>
+            {clusterIds.map((id, index) => {
+              const item = preparedClusters.markersById.get(id);
+              if (!item) return null;
+              return (
+                <TouchableOpacity key={id} accessibilityRole="button"
+                  accessibilityLabel={`Ver reporte del clúster ${index + 1}`}
+                  style={styles.clusterItem} onPress={() => { setSupportMessage(''); setSelected(item); }}>
+                  <Text>{item.tipo} · {item.descripcion}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+      )}
       {selected && (
         <View style={styles.card}>
+          {clusterIds.length > 0 && (
+            <TouchableOpacity accessibilityRole="button" onPress={() => setSelected(null)}>
+              <Text style={styles.backText}>‹ Volver a los reportes del clúster</Text>
+            </TouchableOpacity>
+          )}
           <Text style={styles.cardTitle}>{selected.tipo}</Text>
           <Text>{selected.descripcion}</Text>
           <Text style={styles.place}>{lugarDeReporte(selected)}</Text>
           <Text style={styles.priority}>{selected.estilo.prioridad || 'Sin prioridad definida'}</Text>
-          <Text style={styles.place}>{selected.apoyos || 0} apoyos</Text>
+          <Text style={styles.place}>{formatearApoyos(selected.apoyos ?? 0)}</Text>
           {selected.estado === 'Pendiente' && selected.usuarioId !== auth.currentUser?.uid && (
             <TouchableOpacity accessibilityRole="button" accessibilityLabel="Apoyar reporte"
               disabled={supporting} onPress={apoyarSeleccionado} style={styles.supportButton}>
@@ -162,6 +191,8 @@ const styles = StyleSheet.create({
   cardTitle: { fontSize: 18, fontWeight: '700', color: '#0F172A' },
   place: { marginTop: 6, color: '#475569' },
   priority: { marginTop: 6, color: '#64748B' },
+  clusterList: { maxHeight: 180 },
+  clusterItem: { paddingVertical: 10 },
   supportButton: { backgroundColor: '#0057FF', padding: 12, borderRadius: 10, alignItems: 'center', marginTop: 12 },
   supportText: { color: '#FFFFFF', fontWeight: '700' },
 });

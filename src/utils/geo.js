@@ -12,10 +12,9 @@ export function distanciaMetros(lat1, lng1, lat2, lng2) {
   return 2 * EARTH_RADIUS_METERS * Math.asin(Math.min(1, Math.sqrt(a)));
 }
 
-export function esCandidatoCercano(reporte, { tipo, lat, lng, uid } = {}) {
+export function esCandidatoCercano(reporte, { tipo, lat, lng } = {}) {
   return reporte?.estado === 'Pendiente'
     && reporte.tipo === tipo
-    && reporte.usuarioId !== uid
     && coordenadasValidas(lat, lng)
     && coordenadasValidas(reporte.lat, reporte.lng)
     && distanciaMetros(lat, lng, reporte.lat, reporte.lng) <= 150;

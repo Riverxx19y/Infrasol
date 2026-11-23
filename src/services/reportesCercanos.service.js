@@ -9,7 +9,7 @@ export async function buscarReportesCercanos(criteria) {
   let hayMas = true;
 
   while (hayMas) {
-    const page = await consultarPaginaReportes(filtros, cursor);
+    const page = await consultarPaginaReportes(filtros, cursor, { soloServidor: true });
     candidatos.push(...page.reportes.filter((item) => esCandidatoCercano(item, criteria)));
     cursor = page.cursor;
     hayMas = page.hayMas;

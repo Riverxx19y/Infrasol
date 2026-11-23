@@ -19,7 +19,7 @@ const report = (id, extra = {}) => ({
 beforeEach(() => {
   jest.clearAllMocks();
   esCandidatoCercano.mockImplementation((item, search) => item.tipo === search.tipo
-    && item.estado === 'Pendiente' && item.usuarioId !== search.uid && item.cerca !== false);
+    && item.estado === 'Pendiente' && item.cerca !== false);
 });
 
 test('consulta solo la categoría exacta y estado Pendiente usando el paginador común', async () => {
@@ -29,6 +29,7 @@ test('consulta solo la categoría exacta y estado Pendiente usando el paginador 
   expect(where).toHaveBeenCalledWith('estado', '==', 'Pendiente');
   expect(where).toHaveBeenCalledWith('tipo', '==', 'Alumbrado');
   expect(consultarPaginaReportes).toHaveBeenCalledTimes(1);
+  expect(consultarPaginaReportes).toHaveBeenCalledWith(expect.any(Array), null, { soloServidor: true });
 });
 
 test('revisa páginas de 25 y encuentra un candidato después de los primeros 20', async () => {
@@ -43,14 +44,16 @@ test('revisa páginas de 25 y encuentra un candidato después de los primeros 20
   expect(consultarPaginaReportes.mock.calls[1][1]).toBe(cursor);
 });
 
-test('descarta estado, categoría y autor incorrectos aunque aparezcan en una página', async () => {
+test('descarta otro estado y categoría, y conserva coincidencias del autor', async () => {
   expect(buscarReportesCercanos).toEqual(expect.any(Function));
   consultarPaginaReportes.mockResolvedValue({
     reportes: [report('r1'), report('r2', { estado: 'Resuelto' }),
       report('r3', { tipo: 'Vías' }), report('r4', { usuarioId: 'ciudadano-1' })],
     cursor: null, hayMas: false,
   });
-  await expect(buscarReportesCercanos(criteria)).resolves.toEqual([report('r1')]);
+  await expect(buscarReportesCercanos(criteria)).resolves.toEqual([
+    report('r1'), report('r4', { usuarioId: 'ciudadano-1' }),
+  ]);
 });
 
 test('propaga un error de consulta sin presentar un resultado vacío', async () => {

@@ -185,7 +185,7 @@ test('HU-03 RED 2: evita envíos duplicados mientras se sube la fotografía', as
   const { tree } = renderScreen();
   await fillRequiredFields(tree);
   await chooseSource(tree, 'Galería');
-  act(() => { button(tree, 'Crear reporte').props.onPress(); });
+  await act(async () => { button(tree, 'Crear reporte').props.onPress(); });
   act(() => { button(tree, 'Crear reporte').props.onPress(); });
   expect(subirFoto).toHaveBeenCalledTimes(1);
   expect(crearReporte).not.toHaveBeenCalled();

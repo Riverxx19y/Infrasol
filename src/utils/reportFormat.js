@@ -2,6 +2,15 @@ export const SIN_DIRECCION = 'Ubicación sin dirección';
 
 export const lugarDeReporte = (reporte) => reporte?.lugar || SIN_DIRECCION;
 
+export function formatearApoyos(cantidad = 0) {
+  return `${cantidad} ${cantidad === 1 ? 'apoyo' : 'apoyos'}`;
+}
+
+export function mensajeDeApoyo({ apoyado, apoyos }) {
+  const mensaje = apoyado ? 'Apoyo registrado.' : 'Ya apoyaste este reporte.';
+  return `${mensaje} ${formatearApoyos(apoyos)}.`;
+}
+
 // Convierte un Timestamp de Firestore a dd/mm/aaaa.
 export function formatearFecha(fecha) {
   const date = typeof fecha?.toDate === 'function' ? fecha.toDate() : null;

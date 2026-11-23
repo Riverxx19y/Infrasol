@@ -1,6 +1,8 @@
 import Supercluster from 'supercluster';
 import { coordenadasValidas } from './coordinates';
 
+export const MAX_CLUSTER_ZOOM = 20;
+
 const CATEGORIES = {
   Alumbrado: { color: '#D97706', symbol: '💡' },
   'Vías': { color: '#475569', symbol: '🚧' },
@@ -38,7 +40,7 @@ export function prepararClusteres(markers) {
     geometry: { type: 'Point', coordinates: [marker.lng, marker.lat] },
     properties: { id: marker.id },
   }));
-  const index = new Supercluster({ radius: 60, maxZoom: 20 });
+  const index = new Supercluster({ radius: 60, maxZoom: MAX_CLUSTER_ZOOM });
   index.load(features);
   return { index, markersById: new Map(markers.map((marker) => [marker.id, marker])) };
 }
@@ -64,4 +66,8 @@ export function consultarClusteres({ index, markersById }, zoom, bounds = [-180,
 
 export function agruparMarcadores(markers, zoom, bounds = [-180, -90, 180, 90]) {
   return consultarClusteres(prepararClusteres(markers), zoom, bounds);
+}
+
+export function obtenerMiembrosCluster({ index }, grupo) {
+  return index.getLeaves(grupo.clusterId, grupo.count).map(({ properties }) => properties.id);
 }
