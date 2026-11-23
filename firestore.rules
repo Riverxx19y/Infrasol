@@ -43,7 +43,12 @@ service cloud.firestore {
       }
 
       allow create: if ciudadanoVerificado() && reporteValido();
-      allow get, list, update, delete: if false;
+      allow list: if ciudadanoVerificado()
+        && resource.data.estado == 'Pendiente'
+        && request.query.limit != null
+        && request.query.limit > 0
+        && request.query.limit <= 25;
+      allow get, update, delete: if false;
     }
     match /verificaciones/{userId} {
       allow read, write: if false;
