@@ -5,6 +5,8 @@ import { TextInput, TouchableOpacity, View } from 'react-native';
 jest.mock('../../services/location.service', () => ({ obtenerUbicacionActual: jest.fn() }));
 jest.mock('../../services/reports.service', () => ({ crearReporte: jest.fn() }));
 jest.mock('../../services/photo.service', () => ({ subirFoto: jest.fn() }));
+jest.mock('../../services/reportesCercanos.service', () => ({ buscarReportesCercanos: jest.fn().mockResolvedValue([]) }));
+jest.mock('../../services/apoyos.gateway', () => ({ apoyarReporte: jest.fn() }));
 
 const { obtenerUbicacionActual } = require('../../services/location.service');
 const { crearReporte } = require('../../services/reports.service');
@@ -93,8 +95,10 @@ test('impide dos envíos mientras Firestore sigue procesando el primero', async 
   crearReporte.mockReturnValue(new Promise((resolve) => { finish = resolve; }));
   const { tree } = renderScreen();
   await fillValidForm(tree);
-  act(() => { button(tree, 'Crear reporte').props.onPress(); });
-  act(() => { button(tree, 'Crear reporte').props.onPress(); });
+  await act(async () => {
+    button(tree, 'Crear reporte').props.onPress();
+    button(tree, 'Crear reporte').props.onPress();
+  });
   expect(crearReporte).toHaveBeenCalledTimes(1);
   await act(async () => { finish('reporte-1'); });
   act(() => { tree.unmount(); });
