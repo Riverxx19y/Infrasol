@@ -43,8 +43,10 @@ service cloud.firestore {
       }
 
       allow create: if ciudadanoVerificado() && reporteValido();
+      // HU-04: cualquier ciudadano verificado lista reportes Pendiente (mapa).
+      // HU-07: el dueño lista su propio historial en cualquier estado.
       allow list: if ciudadanoVerificado()
-        && resource.data.estado == 'Pendiente'
+        && (resource.data.usuarioId == request.auth.uid || resource.data.estado == 'Pendiente')
         && request.query.limit != null
         && request.query.limit > 0
         && request.query.limit <= 25;

@@ -1,6 +1,6 @@
 import { StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-export default function StartScreen({ onSignOut, onCreateReport, onOpenMap }) {
+export default function StartScreen({ onSignOut, onCreateReport, onOpenMap, onOpenHistory }) {
   return (
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" />
@@ -11,6 +11,9 @@ export default function StartScreen({ onSignOut, onCreateReport, onOpenMap }) {
       </TouchableOpacity>
       <TouchableOpacity accessibilityRole="button" accessibilityLabel="Ver mapa de reportes" onPress={onOpenMap} style={styles.mapButton}>
         <Text style={styles.mapText}>Ver mapa de reportes</Text>
+      </TouchableOpacity>
+      <TouchableOpacity accessibilityRole="button" accessibilityLabel="Mis reportes" onPress={onOpenHistory} style={styles.mapButton}>
+        <Text style={styles.mapText}>Mis reportes</Text>
       </TouchableOpacity>
       <TouchableOpacity accessibilityRole="button" accessibilityLabel="Cerrar sesión" onPress={onSignOut} style={styles.signOutButton}>
         <Text style={styles.signOutText}>Cerrar sesión</Text>
