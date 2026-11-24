@@ -1,4 +1,5 @@
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { cardBase, font, space, topInset } from '../../theme/tokens';
 import { useAuthStyles } from '../auth/styles';
 import { useTheme } from '../../theme/ThemeProvider';
 import { useThemedStyles } from '../../theme/useThemedStyles';
@@ -67,10 +68,10 @@ export default function AdminScreen({ onSignOut }) {
 
 const createStyles = (colors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
-  content: { padding: 24, paddingTop: 48, gap: 16 },
-  card: { backgroundColor: colors.surface, padding: 16, borderRadius: 14, gap: 6 },
-  text: { color: colors.text },
-  heading: { color: colors.text, fontSize: 16, fontWeight: '700' },
-  selector: { marginTop: 12 },
+  content: { padding: space.xl, paddingTop: topInset, paddingBottom: space.xxl * 2, gap: space.lg },
+  card: { ...cardBase(colors), gap: space.xs + 2 },
+  text: { color: colors.text, fontSize: font.label },
+  heading: { color: colors.text, fontSize: 17, fontWeight: '800' },
+  selector: { marginTop: space.md, paddingTop: space.sm, borderTopWidth: 1, borderColor: colors.border },
   loading: { flexDirection: 'row', alignItems: 'center', gap: 8 },
 });
