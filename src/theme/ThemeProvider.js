@@ -13,11 +13,13 @@ export function ThemeProvider({ children }) {
   const [persistenceError, setPersistenceError] = useState(null);
   const pendingWrite = useRef(Promise.resolve());
   const lastSelection = useRef(0);
+  const mounted = useRef(false);
 
   useEffect(() => {
     let active = true;
+    mounted.current = true;
     loadThemePreference().then((saved) => { if (active) setCurrentTheme(saved); });
-    return () => { active = false; };
+    return () => { active = false; mounted.current = false; };
   }, []);
 
   const setTheme = useCallback((next) => {
@@ -31,7 +33,7 @@ export function ThemeProvider({ children }) {
       try {
         await saveThemePreference(next);
       } catch {
-        if (selection === lastSelection.current) {
+        if (mounted.current && selection === lastSelection.current) {
           setPersistenceError('No se pudo guardar el tema. Intenta de nuevo.');
         }
       }

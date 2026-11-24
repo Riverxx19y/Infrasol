@@ -1,5 +1,6 @@
 import { useTheme } from '../../theme/ThemeProvider';
 import { useThemedStyles } from '../../theme/useThemedStyles';
+import { palettes } from '../../theme/palettes';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import MapView from 'react-native-maps';
@@ -13,9 +14,9 @@ import { apoyarReporte } from '../../services/apoyos.gateway';
 
 const LIGHT_MAP_STYLE = [];
 const DARK_MAP_STYLE = [
-  { elementType: 'geometry', stylers: [{ color: '#1E293B' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#CBD5E1' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#0F172A' }] },
+  { elementType: 'geometry', stylers: [{ color: palettes.dark.surface }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: palettes.dark.mutedText }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: palettes.dark.background }] },
   { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#475569' }] },
   { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0C2947' }] },
   { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#163A32' }] },
