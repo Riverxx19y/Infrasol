@@ -2,12 +2,15 @@ import { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { reenviarCodigo, verificarCodigo } from '../../services/registration.service';
 import { useCooldown } from '../../hooks/useCooldown';
-import { colors, styles } from './styles';
+import { useAuthStyles } from './styles';
+import { useTheme } from '../../theme/ThemeProvider';
 
 const emptyDigits = () => Array(6).fill('');
 const RESEND_WAIT_MS = 60_000;
 
 export default function VerificationScreen({ user, otpGateway, onUseAnotherAccount }) {
+  const styles = useAuthStyles();
+  const { colors } = useTheme();
   const [digits, setDigits] = useState(emptyDigits);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -76,7 +79,7 @@ export default function VerificationScreen({ user, otpGateway, onUseAnotherAccou
           </View>
           {!!error && <View accessibilityRole="alert" style={styles.errorBox}><Text style={styles.errorText}>{error}</Text></View>}
           <TouchableOpacity accessibilityRole="button" accessibilityLabel="Verificar código" style={styles.primaryButton} onPress={handleVerify} disabled={loading}>
-            {loading ? <ActivityIndicator color={colors.surface} /> : <Text style={styles.primaryText}>Verificar código</Text>}
+            {loading ? <ActivityIndicator color={colors.onPrimary} /> : <Text style={styles.primaryText}>Verificar código</Text>}
           </TouchableOpacity>
           <TouchableOpacity accessibilityRole="button" accessibilityLabel="Reenviar código" style={styles.secondaryButton} onPress={handleResend} disabled={loading || resendCoolingDown}>
             <Text style={styles.secondaryText}>{resendCoolingDown ? 'Código enviado (espera 1 min)' : 'Reenviar código'}</Text>

@@ -4,9 +4,12 @@ import { iniciarSesion } from '../../services/auth.service';
 import { validarCredenciales } from '../../services/auth.validation';
 import { loginErrors, mensajeErrorAuth } from '../../services/auth.errors';
 import AuthHeader from './AuthHeader';
-import { colors, styles } from './styles';
+import { useAuthStyles } from './styles';
+import { useTheme } from '../../theme/ThemeProvider';
 
 export default function LoginScreen({ onLogin, onRegister, onForgotPassword }) {
+  const styles = useAuthStyles();
+  const { colors } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -41,15 +44,15 @@ export default function LoginScreen({ onLogin, onRegister, onForgotPassword }) {
           <Text accessibilityRole="header" style={styles.title}>Iniciar sesión</Text>
           <Text style={styles.subtitle}>Bienvenido de nuevo</Text>
           <Text style={styles.label}>Correo electrónico</Text>
-          <TextInput accessibilityLabel="Correo electrónico" style={styles.input} placeholder="correo@ejemplo.com" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" />
+          <TextInput accessibilityLabel="Correo electrónico" style={styles.input} placeholderTextColor={colors.mutedText} placeholder="correo@ejemplo.com" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" />
           <Text style={styles.label}>Contraseña</Text>
-          <TextInput accessibilityLabel="Contraseña" style={styles.input} placeholder="Tu contraseña" value={password} onChangeText={setPassword} secureTextEntry autoComplete="current-password" />
+          <TextInput accessibilityLabel="Contraseña" style={styles.input} placeholderTextColor={colors.mutedText} placeholder="Tu contraseña" value={password} onChangeText={setPassword} secureTextEntry autoComplete="current-password" />
           <TouchableOpacity accessibilityRole="button" accessibilityLabel="Olvidé mi contraseña" style={styles.linkButton} onPress={onForgotPassword} disabled={loading}>
             <Text style={styles.linkText}>¿Olvidaste tu contraseña?</Text>
           </TouchableOpacity>
           {!!error && <View accessibilityRole="alert" style={styles.errorBox}><Text style={styles.errorText}>{error}</Text></View>}
           <TouchableOpacity accessibilityRole="button" accessibilityLabel="Entrar" style={styles.primaryButton} onPress={handleLogin} disabled={loading}>
-            {loading ? <ActivityIndicator color={colors.surface} /> : <Text style={styles.primaryText}>Entrar →</Text>}
+            {loading ? <ActivityIndicator color={colors.onPrimary} /> : <Text style={styles.primaryText}>Entrar →</Text>}
           </TouchableOpacity>
           <TouchableOpacity accessibilityRole="button" accessibilityLabel="Crear cuenta" style={styles.secondaryButton} onPress={onRegister} disabled={loading}>
             <Text style={styles.secondaryText}>¿No tienes cuenta? Regístrate</Text>

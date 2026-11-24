@@ -5,12 +5,15 @@ import { validarCorreo } from '../../services/auth.validation';
 import { mensajeErrorAuth, RECOVERY_GENERIC_ERROR, recoveryErrors } from '../../services/auth.errors';
 import { useCooldown } from '../../hooks/useCooldown';
 import AuthHeader from './AuthHeader';
-import { colors, styles } from './styles';
+import { useAuthStyles } from './styles';
+import { useTheme } from '../../theme/ThemeProvider';
 
 const RESEND_WAIT_MS = 60_000;
 const CONFIRMATION = 'Si el correo está registrado, recibirás un enlace para restablecer tu contraseña. Revisa también la carpeta de correo no deseado.';
 
 export default function RecoverPasswordScreen({ onBack }) {
+  const styles = useAuthStyles();
+  const { colors } = useTheme();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -52,11 +55,11 @@ export default function RecoverPasswordScreen({ onBack }) {
           <Text accessibilityRole="header" style={styles.title}>Recuperar contraseña</Text>
           <Text style={styles.subtitle}>Te enviaremos un enlace para crear una nueva contraseña</Text>
           <Text style={styles.label}>Correo electrónico</Text>
-          <TextInput accessibilityLabel="Correo electrónico" style={styles.input} placeholder="correo@ejemplo.com" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" />
+          <TextInput accessibilityLabel="Correo electrónico" style={styles.input} placeholderTextColor={colors.mutedText} placeholder="correo@ejemplo.com" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" />
           {!!error && <View accessibilityRole="alert" style={styles.errorBox}><Text style={styles.errorText}>{error}</Text></View>}
           {sent && <View accessibilityLiveRegion="polite" style={styles.successBox}><Text style={styles.successText}>{CONFIRMATION}</Text></View>}
           <TouchableOpacity accessibilityRole="button" accessibilityLabel="Enviar enlace" style={styles.primaryButton} onPress={handleSubmit} disabled={loading || cooldown.active}>
-            {loading ? <ActivityIndicator color={colors.surface} /> : <Text style={styles.primaryText}>{cooldown.active ? 'Enlace enviado (espera 1 min)' : 'Enviar enlace →'}</Text>}
+            {loading ? <ActivityIndicator color={colors.onPrimary} /> : <Text style={styles.primaryText}>{cooldown.active ? 'Enlace enviado (espera 1 min)' : 'Enviar enlace →'}</Text>}
           </TouchableOpacity>
           <TouchableOpacity accessibilityRole="button" accessibilityLabel="Volver a iniciar sesión" style={styles.secondaryButton} onPress={onBack}>
             <Text style={styles.secondaryText}>Volver a iniciar sesión</Text>

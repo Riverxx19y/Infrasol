@@ -1,3 +1,4 @@
+import { useThemedStyles } from '../../theme/useThemedStyles';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export function bubbleSize(count, isCluster) {
@@ -8,6 +9,7 @@ export function bubbleSize(count, isCluster) {
 }
 
 export default function ReportBubble({ group, size, onPress, x, y }) {
+  const styles = useThemedStyles(createStyles);
   return (
     <TouchableOpacity
       accessibilityRole="button"
@@ -36,18 +38,18 @@ export default function ReportBubble({ group, size, onPress, x, y }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   bubble: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
   halo: {
     position: 'absolute', top: -8, left: -8, right: -8, bottom: -8,
-    backgroundColor: 'rgba(0, 87, 255, 0.22)',
+    backgroundColor: colors.selected,
   },
   clusterOuter: {
     width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: '#FFFFFF', elevation: 4,
+    backgroundColor: colors.surface, elevation: 4,
   },
-  clusterInner: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#0057FF' },
-  clusterText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
+  clusterInner: { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary },
+  clusterText: { color: colors.onPrimary, fontSize: 16, fontWeight: '700' },
   pinOuter: {
     width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center',
     elevation: 4,

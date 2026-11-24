@@ -1,3 +1,5 @@
+import { useTheme } from '../../theme/ThemeProvider';
+import { useThemedStyles } from '../../theme/useThemedStyles';
 import { useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
@@ -11,6 +13,8 @@ import { formatearApoyos, lugarDeReporte, mensajeDeApoyo } from '../../utils/rep
 const TIPOS = ['Alumbrado', 'Vías', 'Alcantarillado', 'Basuras', 'Zonas verdes', 'Otro'];
 
 export default function CreateReportScreen({ user, onBack, onCreated }) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
   const [tipo, setTipo] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [ubicacion, setUbicacion] = useState(null);
@@ -182,6 +186,7 @@ export default function CreateReportScreen({ user, onBack, onCreated }) {
       <Text style={styles.label}>Descripción *</Text>
       <TextInput
         accessibilityLabel="Descripción" multiline
+        placeholderTextColor={colors.mutedText}
         placeholder="Describe el problema y una referencia útil"
         value={descripcion} onChangeText={setDescripcion} editable={!sending}
         style={styles.description}
@@ -193,7 +198,7 @@ export default function CreateReportScreen({ user, onBack, onCreated }) {
         accessibilityRole="button" accessibilityLabel="Obtener ubicación"
         disabled={gpsLoading || sending} onPress={capturarUbicacion} style={styles.actionButton}
       >
-        {gpsLoading ? <ActivityIndicator color="#0057FF" /> : <Text style={styles.actionText}>📍 {ubicacion ? 'Actualizar ubicación' : 'Obtener ubicación'}</Text>}
+        {gpsLoading ? <ActivityIndicator color={colors.primary} /> : <Text style={styles.actionText}>📍 {ubicacion ? 'Actualizar ubicación' : 'Obtener ubicación'}</Text>}
       </TouchableOpacity>
       {ubicacion && (
         <View style={styles.locationBox}>
@@ -219,14 +224,14 @@ export default function CreateReportScreen({ user, onBack, onCreated }) {
           <Text style={styles.label}>Reportes cercanos de la misma categoría</Text>
           {cercanos.map((reporte, index) => (
             <View key={reporte.id} style={styles.nearbyItem}>
-              {reporte.usuarioId === user?.uid && <Text>Ya reportaste esta deficiencia</Text>}
-              <Text>{reporte.descripcion || reporte.tipo}</Text>
-              <Text>{formatearApoyos(reporte.apoyos ?? 0)}</Text>
+              {reporte.usuarioId === user?.uid && <Text style={styles.body}>Ya reportaste esta deficiencia</Text>}
+              <Text style={styles.body}>{reporte.descripcion || reporte.tipo}</Text>
+              <Text style={styles.body}>{formatearApoyos(reporte.apoyos ?? 0)}</Text>
               <TouchableOpacity accessibilityRole="button" accessibilityLabel={`Ver reporte cercano ${index + 1}`}
                 onPress={() => setDetalleCercano(detalleCercano === reporte.id ? null : reporte.id)} style={styles.actionButton}>
                 <Text style={styles.actionText}>{detalleCercano === reporte.id ? 'Ocultar detalle' : 'Ver reporte'}</Text>
               </TouchableOpacity>
-              {detalleCercano === reporte.id && <Text>{lugarDeReporte(reporte)} · {reporte.estado}</Text>}
+              {detalleCercano === reporte.id && <Text style={styles.body}>{lugarDeReporte(reporte)} · {reporte.estado}</Text>}
               {reporte.usuarioId !== user?.uid && (
                 <TouchableOpacity accessibilityRole="button" accessibilityLabel="Apoyar reporte cercano"
                   disabled={supporting || sending} onPress={() => apoyarCercano(reporte)} style={styles.actionButton}>
@@ -247,38 +252,39 @@ export default function CreateReportScreen({ user, onBack, onCreated }) {
         accessibilityState={{ disabled: sending || gpsLoading || supporting }} disabled={sending || gpsLoading || supporting}
         onPress={() => enviar()} style={[styles.submit, sending && styles.submitDisabled]}
       >
-        {sending ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.submitText}>Crear reporte</Text>}
+        {sending ? <ActivityIndicator color={colors.onPrimary} /> : <Text style={styles.submitText}>Crear reporte</Text>}
       </TouchableOpacity>
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#F1F5F9' },
+const createStyles = (colors) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.background },
   content: { padding: 24, paddingTop: 52, paddingBottom: 48 },
   back: { marginBottom: 18, alignSelf: 'flex-start' },
-  backText: { color: '#0057FF', fontSize: 16, fontWeight: '600' },
-  title: { color: '#0F172A', fontSize: 30, fontWeight: '700' },
-  subtitle: { color: '#475569', fontSize: 15, marginTop: 6, marginBottom: 24 },
-  label: { color: '#0F172A', fontWeight: '700', fontSize: 15, marginTop: 20, marginBottom: 9 },
+  backText: { color: colors.primary, fontSize: 16, fontWeight: '600' },
+  title: { color: colors.text, fontSize: 30, fontWeight: '700' },
+  body: { color: colors.text },
+  subtitle: { color: colors.mutedText, fontSize: 15, marginTop: 6, marginBottom: 24 },
+  label: { color: colors.text, fontWeight: '700', fontSize: 15, marginTop: 20, marginBottom: 9 },
   types: { flexDirection: 'row', flexWrap: 'wrap', gap: 9 },
-  type: { borderColor: '#CBD5E1', borderWidth: 1, borderRadius: 12, paddingVertical: 10, paddingHorizontal: 14, backgroundColor: '#FFFFFF' },
-  typeSelected: { borderColor: '#0057FF', backgroundColor: '#DBEAFE' },
-  typeText: { color: '#334155', fontWeight: '600' },
-  typeTextSelected: { color: '#0044CC' },
-  description: { minHeight: 112, padding: 14, backgroundColor: '#FFFFFF', borderColor: '#CBD5E1', borderWidth: 1, borderRadius: 12, fontSize: 15 },
-  actionButton: { backgroundColor: '#FFFFFF', borderColor: '#0057FF', borderWidth: 1, borderRadius: 12, padding: 15, alignItems: 'center' },
-  actionText: { color: '#0057FF', fontWeight: '700' },
-  locationBox: { backgroundColor: '#E7F6EF', borderRadius: 12, padding: 13, marginTop: 10 },
-  locationText: { color: '#14532D', fontWeight: '600' },
-  coordinates: { color: '#475569', marginTop: 4 },
+  type: { borderColor: colors.border, borderWidth: 1, borderRadius: 12, paddingVertical: 10, paddingHorizontal: 14, backgroundColor: colors.surface },
+  typeSelected: { borderColor: colors.primary, backgroundColor: colors.selected },
+  typeText: { color: colors.mutedText, fontWeight: '600' },
+  typeTextSelected: { color: colors.primary },
+  description: { color: colors.text, minHeight: 112, padding: 14, backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: 12, fontSize: 15 },
+  actionButton: { backgroundColor: colors.surface, borderColor: colors.primary, borderWidth: 1, borderRadius: 12, padding: 15, alignItems: 'center' },
+  actionText: { color: colors.primary, fontWeight: '700' },
+  locationBox: { backgroundColor: colors.successSurface, borderRadius: 12, padding: 13, marginTop: 10 },
+  locationText: { color: colors.success, fontWeight: '600' },
+  coordinates: { color: colors.mutedText, marginTop: 4 },
   photoPreview: { width: '100%', height: 200, borderRadius: 12, marginTop: 10 },
-  nearbyItem: { paddingVertical: 12, gap: 8, borderBottomWidth: 1, borderColor: '#CBD5E1' },
-  errorBox: { backgroundColor: '#FEE2E2', borderRadius: 10, padding: 12, marginTop: 18 },
-  errorText: { color: '#991B1B' },
-  successBox: { backgroundColor: '#DCFCE7', borderRadius: 10, padding: 12, marginTop: 18 },
-  successText: { color: '#166534' },
-  submit: { backgroundColor: '#0057FF', borderRadius: 12, padding: 16, alignItems: 'center', marginTop: 24 },
+  nearbyItem: { paddingVertical: 12, gap: 8, borderBottomWidth: 1, borderColor: colors.border },
+  errorBox: { backgroundColor: colors.dangerSurface, borderRadius: 10, padding: 12, marginTop: 18 },
+  errorText: { color: colors.danger },
+  successBox: { backgroundColor: colors.successSurface, borderRadius: 10, padding: 12, marginTop: 18 },
+  successText: { color: colors.success },
+  submit: { backgroundColor: colors.primary, borderRadius: 12, padding: 16, alignItems: 'center', marginTop: 24 },
   submitDisabled: { opacity: 0.65 },
-  submitText: { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
+  submitText: { color: colors.onPrimary, fontWeight: '700', fontSize: 16 },
 });

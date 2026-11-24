@@ -1,11 +1,12 @@
-import { StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useThemedStyles } from '../theme/useThemedStyles';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useNotificaciones } from '../hooks/useNotificaciones';
 
-export default function StartScreen({ user, onSignOut, onCreateReport, onOpenMap, onOpenHistory, onOpenNotifications }) {
+export default function StartScreen({ user, onSignOut, onCreateReport, onOpenMap, onOpenHistory, onOpenNotifications, onOpenProfile }) {
+  const styles = useThemedStyles(createStyles);
   const { pendientes } = useNotificaciones(user?.uid);
   return (
     <View style={styles.screen}>
-      <StatusBar barStyle="dark-content" />
       <Text accessibilityRole="header" style={styles.title}>INFRASOL</Text>
       <Text style={styles.message}>Ayúdanos a identificar problemas de infraestructura en tu comunidad.</Text>
       <TouchableOpacity accessibilityRole="button" accessibilityLabel="Notificaciones" onPress={onOpenNotifications} style={styles.bell}>
@@ -21,6 +22,11 @@ export default function StartScreen({ user, onSignOut, onCreateReport, onOpenMap
       <TouchableOpacity accessibilityRole="button" accessibilityLabel="Mis reportes" onPress={onOpenHistory} style={styles.secondaryButton}>
         <Text style={styles.secondaryText}>Mis reportes</Text>
       </TouchableOpacity>
+      {onOpenProfile && (
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Perfil" onPress={onOpenProfile} style={styles.secondaryButton}>
+          <Text style={styles.secondaryText}>Perfil</Text>
+        </TouchableOpacity>
+      )}
       <TouchableOpacity accessibilityRole="button" accessibilityLabel="Cerrar sesión" onPress={onSignOut} style={styles.signOutButton}>
         <Text style={styles.signOutText}>Cerrar sesión</Text>
       </TouchableOpacity>
@@ -28,33 +34,33 @@ export default function StartScreen({ user, onSignOut, onCreateReport, onOpenMap
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   screen: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.background,
   },
   title: {
-    color: '#0F172A',
+    color: colors.text,
     fontSize: 32,
     fontWeight: '700',
     textAlign: 'center',
   },
   message: {
     marginTop: 8,
-    color: '#334155',
+    color: colors.mutedText,
     fontSize: 16,
     textAlign: 'center',
   },
   bell: { marginTop: 20, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12 },
-  bellText: { color: '#0057FF', fontWeight: '700', fontSize: 16 },
-  badge: { color: '#FFFFFF', backgroundColor: '#B91C1C', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3, overflow: 'hidden', fontWeight: '700' },
-  createButton: { marginTop: 28, backgroundColor: '#0057FF', borderRadius: 12, paddingVertical: 14, paddingHorizontal: 24 },
-  createText: { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
-  secondaryButton: { marginTop: 16, borderWidth: 1, borderColor: '#0057FF', borderRadius: 12, paddingVertical: 14, paddingHorizontal: 24 },
-  secondaryText: { color: '#0057FF', fontWeight: '700', fontSize: 16 },
+  bellText: { color: colors.primary, fontWeight: '700', fontSize: 16 },
+  badge: { color: colors.onBadge, backgroundColor: colors.badge, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3, overflow: 'hidden', fontWeight: '700' },
+  createButton: { marginTop: 28, backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 14, paddingHorizontal: 24 },
+  createText: { color: colors.onPrimary, fontWeight: '700', fontSize: 16 },
+  secondaryButton: { marginTop: 16, borderWidth: 1, borderColor: colors.primary, borderRadius: 12, paddingVertical: 14, paddingHorizontal: 24 },
+  secondaryText: { color: colors.primary, fontWeight: '700', fontSize: 16 },
   signOutButton: { marginTop: 24, padding: 12 },
-  signOutText: { color: '#0057FF', fontWeight: '700' },
+  signOutText: { color: colors.primary, fontWeight: '700' },
 });
