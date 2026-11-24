@@ -1,6 +1,7 @@
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../../config/firebase';
+import { esCorreoValido } from './auth.validation';
 
 function requireGateway(gateway, operation) {
   if (typeof gateway?.[operation] !== 'function') {
@@ -15,7 +16,7 @@ export async function registrarCiudadano({ nombre, email, password } = {}, gatew
   if (!cleanName || !cleanEmail || !password) {
     throw new Error('Completa los campos obligatorios del registro.');
   }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+  if (!esCorreoValido(cleanEmail)) {
     throw new Error('Ingresa un correo electrónico válido.');
   }
   if (password.length < 6) {
