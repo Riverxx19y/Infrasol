@@ -1,4 +1,5 @@
 import { useTheme } from '../../theme/ThemeProvider';
+import { cardBase, headerStyles, radius, solidButton, space } from '../../theme/tokens';
 import { useThemedStyles } from '../../theme/useThemedStyles';
 import { palettes } from '../../theme/palettes';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -199,17 +200,17 @@ export default function MapScreen({ onBack }) {
 
 const createStyles = (colors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
-  back: { paddingHorizontal: 18, paddingTop: 48, paddingBottom: 12, backgroundColor: colors.surface },
-  backText: { color: colors.primary, fontSize: 18, fontWeight: '600' },
+  back: headerStyles(colors).back,
+  backText: headerStyles(colors).backText,
   map: { flex: 1 },
   message: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10 },
-  card: { padding: 16, backgroundColor: colors.surface, borderTopWidth: 1, borderColor: colors.border },
+  card: { ...cardBase(colors), borderRadius: 0, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg, borderBottomWidth: 0, borderLeftWidth: 0, borderRightWidth: 0, padding: space.xl, gap: 2 },
   cardTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
   body: { color: colors.text },
   place: { marginTop: 6, color: colors.mutedText },
   priority: { marginTop: 6, color: colors.mutedText },
   clusterList: { maxHeight: 180 },
-  clusterItem: { paddingVertical: 10 },
-  supportButton: { backgroundColor: colors.primary, padding: 12, borderRadius: 10, alignItems: 'center', marginTop: 12 },
+  clusterItem: { paddingVertical: space.md, borderBottomWidth: 1, borderColor: colors.border },
+  supportButton: { ...solidButton(colors), minHeight: 48, marginTop: space.md },
   supportText: { color: colors.onPrimary, fontWeight: '700' },
 });

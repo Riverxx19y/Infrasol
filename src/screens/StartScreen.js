@@ -1,6 +1,7 @@
 import { useThemedStyles } from '../theme/useThemedStyles';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useNotificaciones } from '../hooks/useNotificaciones';
+import { font, outlineButton, radius, shadow, solidButton, space, topInset } from '../theme/tokens';
 
 export default function StartScreen({ user, onSignOut, onCreateReport, onOpenMap, onOpenHistory, onOpenNotifications, onOpenProfile }) {
   const styles = useThemedStyles(createStyles);
@@ -38,29 +39,38 @@ const createStyles = (colors) => StyleSheet.create({
   screen: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
+    alignItems: 'stretch',
+    paddingHorizontal: space.xxl,
+    paddingTop: topInset,
+    paddingBottom: space.xxl,
     backgroundColor: colors.background,
   },
   title: {
-    color: colors.text,
-    fontSize: 32,
-    fontWeight: '700',
+    color: colors.primary,
+    fontSize: font.hero,
+    fontWeight: '900',
+    letterSpacing: 2,
     textAlign: 'center',
   },
   message: {
-    marginTop: 8,
+    marginTop: space.sm,
+    marginHorizontal: space.sm,
     color: colors.mutedText,
-    fontSize: 16,
+    fontSize: font.body,
+    lineHeight: 22,
     textAlign: 'center',
   },
-  bell: { marginTop: 20, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12 },
-  bellText: { color: colors.primary, fontWeight: '700', fontSize: 16 },
-  badge: { color: colors.onBadge, backgroundColor: colors.badge, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3, overflow: 'hidden', fontWeight: '700' },
-  createButton: { marginTop: 28, backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 14, paddingHorizontal: 24 },
-  createText: { color: colors.onPrimary, fontWeight: '700', fontSize: 16 },
-  secondaryButton: { marginTop: 16, borderWidth: 1, borderColor: colors.primary, borderRadius: 12, paddingVertical: 14, paddingHorizontal: 24 },
-  secondaryText: { color: colors.primary, fontWeight: '700', fontSize: 16 },
-  signOutButton: { marginTop: 24, padding: 12 },
-  signOutText: { color: colors.primary, fontWeight: '700' },
+  bell: {
+    marginTop: space.xxl, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: space.sm,
+    paddingVertical: 10, paddingHorizontal: space.lg, borderRadius: radius.pill,
+    backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, ...shadow,
+  },
+  bellText: { color: colors.primary, fontWeight: '700', fontSize: font.button },
+  badge: { color: colors.onBadge, backgroundColor: colors.badge, borderRadius: radius.pill, minWidth: 24, textAlign: 'center', paddingHorizontal: 7, paddingVertical: 2, overflow: 'hidden', fontWeight: '800', fontSize: font.caption },
+  createButton: { ...solidButton(colors), marginTop: space.xxl + space.sm },
+  createText: { color: colors.onPrimary, fontWeight: '800', fontSize: font.button },
+  secondaryButton: { ...outlineButton(colors), marginTop: space.md },
+  secondaryText: { color: colors.primary, fontWeight: '700', fontSize: font.button },
+  signOutButton: { marginTop: space.xl, alignSelf: 'center', paddingVertical: space.md, paddingHorizontal: space.xl },
+  signOutText: { color: colors.danger, fontWeight: '700', fontSize: font.label },
 });
