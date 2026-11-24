@@ -1,3 +1,5 @@
+import { useTheme } from '../../theme/ThemeProvider';
+import { useThemedStyles } from '../../theme/useThemedStyles';
 import { useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ReportCard from '../../components/reports/ReportCard';
@@ -5,15 +7,19 @@ import ReportDetail from '../../components/reports/ReportDetail';
 import { useMisReportes } from '../../hooks/useMisReportes';
 
 function Mensaje({ children, cargando = false }) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
   return (
     <View style={styles.message}>
-      {cargando && <ActivityIndicator />}
-      <Text>{children}</Text>
+      {cargando && <ActivityIndicator color={colors.primary} />}
+      <Text style={styles.body}>{children}</Text>
     </View>
   );
 }
 
 export default function MyReportsScreen({ onBack }) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
   const { status, reportes, hayMas, loadingMore, loadMoreError, cargarMas } = useMisReportes();
   const [selected, setSelected] = useState(null);
 
@@ -35,7 +41,7 @@ export default function MyReportsScreen({ onBack }) {
         {loadMoreError && <Text style={styles.error}>No se pudieron cargar más reportes.</Text>}
         {hayMas && (
           <TouchableOpacity accessibilityRole="button" accessibilityLabel="Cargar más" onPress={cargarMas} disabled={loadingMore} style={styles.loadMore}>
-            {loadingMore ? <ActivityIndicator /> : <Text style={styles.loadMoreText}>Cargar más</Text>}
+            {loadingMore ? <ActivityIndicator color={colors.primary} /> : <Text style={styles.loadMoreText}>Cargar más</Text>}
           </TouchableOpacity>
         )}
       </ScrollView>
@@ -53,14 +59,15 @@ export default function MyReportsScreen({ onBack }) {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#F1F5F9' },
-  back: { paddingHorizontal: 18, paddingTop: 48, paddingBottom: 12, backgroundColor: '#FFFFFF' },
-  backText: { color: '#0057FF', fontSize: 18, fontWeight: '600' },
-  title: { fontSize: 24, fontWeight: '700', color: '#0F172A', paddingHorizontal: 18, paddingVertical: 12 },
+const createStyles = (colors) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.background },
+  back: { paddingHorizontal: 18, paddingTop: 48, paddingBottom: 12, backgroundColor: colors.surface },
+  backText: { color: colors.primary, fontSize: 18, fontWeight: '600' },
+  title: { fontSize: 24, fontWeight: '700', color: colors.text, paddingHorizontal: 18, paddingVertical: 12 },
+  body: { color: colors.text },
   message: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, padding: 24 },
   list: { paddingHorizontal: 16, paddingBottom: 24, gap: 12 },
-  error: { color: '#B91C1C', textAlign: 'center' },
-  loadMore: { marginTop: 8, borderWidth: 1, borderColor: '#0057FF', borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
-  loadMoreText: { color: '#0057FF', fontWeight: '700' },
+  error: { color: colors.danger, textAlign: 'center' },
+  loadMore: { marginTop: 8, borderWidth: 1, borderColor: colors.primary, borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
+  loadMoreText: { color: colors.primary, fontWeight: '700' },
 });

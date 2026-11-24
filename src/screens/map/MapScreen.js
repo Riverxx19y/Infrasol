@@ -1,3 +1,5 @@
+import { useTheme } from '../../theme/ThemeProvider';
+import { useThemedStyles } from '../../theme/useThemedStyles';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import MapView from 'react-native-maps';
@@ -9,6 +11,15 @@ import { formatearApoyos, lugarDeReporte, mensajeDeApoyo } from '../../utils/rep
 import { auth } from '../../../config/firebase';
 import { apoyarReporte } from '../../services/apoyos.gateway';
 
+const LIGHT_MAP_STYLE = [];
+const DARK_MAP_STYLE = [
+  { elementType: 'geometry', stylers: [{ color: '#1E293B' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#CBD5E1' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#0F172A' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#475569' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0C2947' }] },
+  { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#163A32' }] },
+];
 const DEFAULT_REGION = {
   latitude: 9.3047,
   longitude: -75.3978,
@@ -17,6 +28,8 @@ const DEFAULT_REGION = {
 };
 
 export default function MapScreen({ onBack }) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, theme } = useTheme();
   const mapRef = useRef(null);
   const [status, setStatus] = useState('loading');
   const [reports, setReports] = useState([]);
@@ -94,15 +107,17 @@ export default function MapScreen({ onBack }) {
       <TouchableOpacity accessibilityRole="button" accessibilityLabel="Volver al inicio" onPress={onBack} style={styles.back}>
         <Text style={styles.backText}>‹ Volver</Text>
       </TouchableOpacity>
-      {status === 'loading' && <View style={styles.message}><ActivityIndicator /><Text>Cargando reportes...</Text></View>}
-      {status === 'error' && <View style={styles.message}><Text>No se pudieron cargar los reportes.</Text></View>}
-      {status === 'ready' && markers.length === 0 && <View style={styles.message}><Text>No hay reportes activos para mostrar.</Text></View>}
+      {status === 'loading' && <View style={styles.message}><ActivityIndicator color={colors.primary} /><Text style={styles.body}>Cargando reportes...</Text></View>}
+      {status === 'error' && <View style={styles.message}><Text style={styles.body}>No se pudieron cargar los reportes.</Text></View>}
+      {status === 'ready' && markers.length === 0 && <View style={styles.message}><Text style={styles.body}>No hay reportes activos para mostrar.</Text></View>}
       {status === 'ready' && markers.length > 0 && (
         <View
           style={styles.map}
           onLayout={(e) => setMapSize(e.nativeEvent.layout)}
         >
           <MapView
+            userInterfaceStyle={theme}
+            customMapStyle={theme === 'dark' ? DARK_MAP_STYLE : LIGHT_MAP_STYLE}
             ref={mapRef}
             style={StyleSheet.absoluteFill}
             initialRegion={region}
@@ -149,7 +164,7 @@ export default function MapScreen({ onBack }) {
                 <TouchableOpacity key={id} accessibilityRole="button"
                   accessibilityLabel={`Ver reporte del clúster ${index + 1}`}
                   style={styles.clusterItem} onPress={() => { setSupportMessage(''); setSelected(item); }}>
-                  <Text>{item.tipo} · {item.descripcion}</Text>
+                  <Text style={styles.body}>{item.tipo} · {item.descripcion}</Text>
                 </TouchableOpacity>
               );
             })}
@@ -164,7 +179,7 @@ export default function MapScreen({ onBack }) {
             </TouchableOpacity>
           )}
           <Text style={styles.cardTitle}>{selected.tipo}</Text>
-          <Text>{selected.descripcion}</Text>
+          <Text style={styles.body}>{selected.descripcion}</Text>
           <Text style={styles.place}>{lugarDeReporte(selected)}</Text>
           <Text style={styles.priority}>{selected.estilo.prioridad || 'Sin prioridad definida'}</Text>
           <Text style={styles.place}>{formatearApoyos(selected.apoyos ?? 0)}</Text>
@@ -181,18 +196,19 @@ export default function MapScreen({ onBack }) {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#F1F5F9' },
-  back: { paddingHorizontal: 18, paddingTop: 48, paddingBottom: 12, backgroundColor: '#FFFFFF' },
-  backText: { color: '#0057FF', fontSize: 18, fontWeight: '600' },
+const createStyles = (colors) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.background },
+  back: { paddingHorizontal: 18, paddingTop: 48, paddingBottom: 12, backgroundColor: colors.surface },
+  backText: { color: colors.primary, fontSize: 18, fontWeight: '600' },
   map: { flex: 1 },
   message: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10 },
-  card: { padding: 16, backgroundColor: '#FFFFFF', borderTopWidth: 1, borderColor: '#CBD5E1' },
-  cardTitle: { fontSize: 18, fontWeight: '700', color: '#0F172A' },
-  place: { marginTop: 6, color: '#475569' },
-  priority: { marginTop: 6, color: '#64748B' },
+  card: { padding: 16, backgroundColor: colors.surface, borderTopWidth: 1, borderColor: colors.border },
+  cardTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
+  body: { color: colors.text },
+  place: { marginTop: 6, color: colors.mutedText },
+  priority: { marginTop: 6, color: colors.mutedText },
   clusterList: { maxHeight: 180 },
   clusterItem: { paddingVertical: 10 },
-  supportButton: { backgroundColor: '#0057FF', padding: 12, borderRadius: 10, alignItems: 'center', marginTop: 12 },
-  supportText: { color: '#FFFFFF', fontWeight: '700' },
+  supportButton: { backgroundColor: colors.primary, padding: 12, borderRadius: 10, alignItems: 'center', marginTop: 12 },
+  supportText: { color: colors.onPrimary, fontWeight: '700' },
 });
