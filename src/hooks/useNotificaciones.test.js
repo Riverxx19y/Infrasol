@@ -5,7 +5,7 @@ import { join } from 'node:path';
 
 jest.mock('../services/notifications.service', () => ({
   suscribirNotificaciones: jest.fn(), marcarNotificacionLeida: jest.fn(),
-}), { virtual: true });
+}));
 
 const { suscribirNotificaciones, marcarNotificacionLeida } = require('../services/notifications.service');
 const implementation = existsSync(join(__dirname, 'useNotificaciones.js'))

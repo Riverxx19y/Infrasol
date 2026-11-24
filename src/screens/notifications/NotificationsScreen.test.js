@@ -4,7 +4,7 @@ import { TouchableOpacity } from 'react-native';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-jest.mock('../../hooks/useNotificaciones', () => ({ useNotificaciones: jest.fn() }), { virtual: true });
+jest.mock('../../hooks/useNotificaciones', () => ({ useNotificaciones: jest.fn() }));
 const { useNotificaciones } = require('../../hooks/useNotificaciones');
 const Screen = existsSync(join(__dirname, 'NotificationsScreen.js'))
   ? require('./NotificationsScreen').default : null;
