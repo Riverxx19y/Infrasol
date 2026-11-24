@@ -52,6 +52,26 @@ service cloud.firestore {
         && request.query.limit <= 25;
       allow get, update, delete: if false;
     }
+    match /notificaciones/{notificationId} {
+      function ciudadanoVerificado() {
+        return request.auth != null
+          && exists(/databases/$(database)/documents/usuarios/$(request.auth.uid))
+          && get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol == 'ciudadano'
+          && get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.emailVerificado == true;
+      }
+
+      function destinatario() {
+        return ciudadanoVerificado() && resource.data.usuarioId == request.auth.uid;
+      }
+
+      allow get, list: if destinatario();
+      allow update: if destinatario()
+        && resource.data.get('leida', false) == false
+        && request.resource.data.leida == true
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['leida'])
+        && request.resource.data.diff(resource.data).affectedKeys().hasAll(['leida']);
+      allow create, delete: if false;
+    }
     match /verificaciones/{userId} {
       allow read, write: if false;
     }
