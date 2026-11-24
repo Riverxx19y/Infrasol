@@ -110,3 +110,43 @@ test('sin sesión no conserva avisos ni crea listeners', () => {
   expect(suscribirNotificaciones).not.toHaveBeenCalled();
   act(() => tree.unmount());
 });
+
+test('dos pulsaciones simultáneas marcan el mismo aviso una sola vez', async () => {
+  let finish;
+  marcarNotificacionLeida.mockReturnValue(new Promise((resolve) => { finish = resolve; }));
+  const tree = mount();
+  emit([status('a', false)]);
+  let first;
+  let second;
+  act(() => {
+    first = current.marcarLeida('a');
+    second = current.marcarLeida('a');
+  });
+  expect(marcarNotificacionLeida).toHaveBeenCalledTimes(1);
+  await act(async () => { finish(); await Promise.all([first, second]); });
+  expect(current.pendientes).toBe(0);
+  act(() => tree.unmount());
+});
+
+test('un marcado antiguo no libera la protección del nuevo usuario con el mismo ID', async () => {
+  let finishOld;
+  let finishNew;
+  marcarNotificacionLeida
+    .mockReturnValueOnce(new Promise((resolve) => { finishOld = resolve; }))
+    .mockReturnValueOnce(new Promise((resolve) => { finishNew = resolve; }));
+  const tree = mount();
+  emit([status('shared', false)]);
+  let oldOperation;
+  act(() => { oldOperation = current.marcarLeida('shared'); });
+  act(() => tree.update(<Probe uid="other" />));
+  emit([status('shared', false, 'other')]);
+  let newOperation;
+  act(() => { newOperation = current.marcarLeida('shared'); });
+  await act(async () => { finishOld(); await oldOperation; });
+  expect(current.pendientes).toBe(1);
+  act(() => { current.marcarLeida('shared'); });
+  expect(marcarNotificacionLeida).toHaveBeenCalledTimes(2);
+  await act(async () => { finishNew(); await newOperation; });
+  expect(current.pendientes).toBe(0);
+  act(() => tree.unmount());
+});

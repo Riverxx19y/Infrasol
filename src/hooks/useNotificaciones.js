@@ -13,7 +13,6 @@ export function useNotificaciones(uid) {
     const current = ++generation.current;
     setNotificaciones([]);
     setMarkError(false);
-    inFlight.current.clear();
     if (!uid) {
       setStatus('ready');
       return undefined;
@@ -37,8 +36,9 @@ export function useNotificaciones(uid) {
 
   const reintentar = useCallback(() => setAttempt((value) => value + 1), []);
   const marcarLeida = useCallback(async (id) => {
-    if (inFlight.current.has(id)) return;
-    inFlight.current.add(id);
+    const key = JSON.stringify([uid, id]);
+    if (inFlight.current.has(key)) return;
+    inFlight.current.add(key);
     const current = generation.current;
     setMarkError(false);
     try {
@@ -48,9 +48,9 @@ export function useNotificaciones(uid) {
     } catch {
       if (current === generation.current) setMarkError(true);
     } finally {
-      inFlight.current.delete(id);
+      inFlight.current.delete(key);
     }
-  }, []);
+  }, [uid]);
   const pendientes = useMemo(() => notificaciones.filter((item) =>
     item.tipo === 'cambio_estado' && item.leida !== true).length, [notificaciones]);
 

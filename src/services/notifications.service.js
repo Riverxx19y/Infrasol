@@ -20,9 +20,11 @@ export async function marcarNotificacionLeida(id) {
   if (typeof id !== 'string' || !id || id.includes('/')) throw new Error('La notificación no es válida.');
   const reference = doc(db, 'notificaciones', id);
   const snapshot = await getDoc(reference);
-  if (!snapshot.exists() || snapshot.data().usuarioId !== uid) {
+  if (!snapshot.exists()) throw new Error('No puedes marcar esta notificación.');
+  const notification = snapshot.data();
+  if (notification.usuarioId !== uid) {
     throw new Error('No puedes marcar esta notificación.');
   }
-  if (snapshot.data().leida === true) return;
+  if (notification.leida === true) return;
   await updateDoc(reference, { leida: true });
 }
