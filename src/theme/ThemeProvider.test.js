@@ -10,6 +10,7 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 
 const path = join(__dirname, 'ThemeProvider.js');
 const { ThemeProvider, useTheme } = existsSync(path) ? require('./ThemeProvider') : {};
+const key = '@infrasol/theme';
 global.IS_REACT_ACT_ENVIRONMENT = true;
 
 let tree;
@@ -76,4 +77,48 @@ test('si falla la escritura, informa el error y admite un reintento', async () =
   await act(async () => { await current.setTheme('dark'); });
   expect(current.persistenceError).toBeFalsy();
   expect(saved).toBe('dark');
+});
+
+test('serializa cambios rápidos y conserva la última preferencia', async () => {
+  await mount();
+  let finishFirstWrite;
+  AsyncStorage.setItem.mockImplementationOnce(() => new Promise((resolve) => {
+    finishFirstWrite = resolve;
+  }));
+
+  let first;
+  let second;
+  await act(async () => {
+    first = current.setTheme('dark');
+    second = current.setTheme('light');
+  });
+  expect(current.theme).toBe('light');
+  expect(AsyncStorage.setItem.mock.calls).toEqual([[key, 'dark']]);
+
+  await act(async () => { finishFirstWrite(); await Promise.all([first, second]); });
+  expect(AsyncStorage.setItem.mock.calls).toEqual([[key, 'dark'], [key, 'light']]);
+  expect(saved).toBe('light');
+  expect(current.persistenceError).toBeNull();
+});
+
+test('un fallo de una selección anterior no oculta el resultado de la más reciente', async () => {
+  await mount();
+  let failFirstWrite;
+  AsyncStorage.setItem.mockImplementationOnce(() => new Promise((_, reject) => {
+    failFirstWrite = reject;
+  }));
+
+  let first;
+  let second;
+  await act(async () => {
+    first = current.setTheme('dark');
+    second = current.setTheme('light');
+  });
+  await act(async () => {
+    failFirstWrite(new Error('Escritura no disponible'));
+    await Promise.all([first, second]);
+  });
+  expect(current.theme).toBe('light');
+  expect(current.persistenceError).toBeNull();
+  expect(saved).toBe('light');
 });
