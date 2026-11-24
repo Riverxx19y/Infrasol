@@ -15,8 +15,11 @@ import CreateReportScreen from '../screens/reports/CreateReportScreen';
 import MapScreen from '../screens/map/MapScreen';
 import MyReportsScreen from '../screens/reports/MyReportsScreen';
 import NotificationsScreen from '../screens/notifications/NotificationsScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+import { useTheme } from '../theme/ThemeProvider';
 
 export default function RootNavigator() {
+  const { colors } = useTheme();
   const [user, setUser] = useState(undefined);
   const [profile, setProfile] = useState(undefined);
   const [authMode, setAuthMode] = useState('register');
@@ -24,6 +27,7 @@ export default function RootNavigator() {
   const [showMap, setShowMap] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
   async function handleSignOut() {
     await signOut(auth);
@@ -42,6 +46,7 @@ export default function RootNavigator() {
       setShowMap(false);
       setShowHistory(false);
       setShowNotifications(false);
+      setShowProfile(false);
       setProfile(currentUser ? undefined : null);
       if (currentUser) {
         stopProfile = onSnapshot(
@@ -64,7 +69,7 @@ export default function RootNavigator() {
   }, []);
 
   if (user === undefined || (user && profile === undefined)) {
-    return <View style={{ flex: 1, justifyContent: 'center' }}><ActivityIndicator size="large" color="#0057FF" /></View>;
+    return <View style={{ flex: 1, justifyContent: 'center', backgroundColor: colors.background }}><ActivityIndicator size="large" color={colors.primary} /></View>;
   }
 
   if (!user) {
@@ -76,6 +81,7 @@ export default function RootNavigator() {
   }
   if (profile?.rol === 'administrador') return <AdminScreen onSignOut={handleSignOut} />;
   if (profile?.rol === 'ciudadano') {
+    if (showProfile) return <ProfileScreen onBack={() => setShowProfile(false)} />;
     if (showCreateReport) return <CreateReportScreen user={user} onBack={() => setShowCreateReport(false)} />;
     if (showMap) return <MapScreen onBack={() => setShowMap(false)} />;
     if (showHistory) return <MyReportsScreen onBack={() => setShowHistory(false)} />;
@@ -88,6 +94,7 @@ export default function RootNavigator() {
         onOpenMap={() => setShowMap(true)}
         onOpenHistory={() => setShowHistory(true)}
         onOpenNotifications={() => setShowNotifications(true)}
+        onOpenProfile={() => setShowProfile(true)}
       />
     );
   }

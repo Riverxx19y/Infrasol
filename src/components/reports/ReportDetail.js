@@ -1,9 +1,11 @@
+import { useThemedStyles } from '../../theme/useThemedStyles';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import EstadoBadge from './EstadoBadge';
 import { formatearFecha, lugarDeReporte } from '../../utils/reportFormat';
 
 // Detalle de un reporte ya cargado en la lista: no vuelve a consultar Firestore.
 export default function ReportDetail({ reporte, onClose }) {
+  const styles = useThemedStyles(createStyles);
   return (
     <View style={styles.detail}>
       <Text style={styles.title}>{reporte.tipo}</Text>
@@ -18,12 +20,12 @@ export default function ReportDetail({ reporte, onClose }) {
   );
 }
 
-const styles = StyleSheet.create({
-  detail: { margin: 16, padding: 16, backgroundColor: '#FFFFFF', borderRadius: 12, gap: 8 },
-  title: { fontSize: 18, fontWeight: '700', color: '#0F172A' },
-  description: { color: '#0F172A', fontSize: 16 },
-  place: { color: '#475569' },
-  date: { color: '#64748B' },
-  button: { marginTop: 8, borderWidth: 1, borderColor: '#0057FF', borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
-  buttonText: { color: '#0057FF', fontWeight: '700' },
+const createStyles = (colors) => StyleSheet.create({
+  detail: { margin: 16, padding: 16, backgroundColor: colors.surface, borderRadius: 12, gap: 8 },
+  title: { fontSize: 18, fontWeight: '700', color: colors.text },
+  description: { color: colors.text, fontSize: 16 },
+  place: { color: colors.mutedText },
+  date: { color: colors.mutedText },
+  button: { marginTop: 8, borderWidth: 1, borderColor: colors.primary, borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
+  buttonText: { color: colors.primary, fontWeight: '700' },
 });

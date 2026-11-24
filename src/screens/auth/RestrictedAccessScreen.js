@@ -1,7 +1,8 @@
 import { Text, TouchableOpacity, View } from 'react-native';
-import { styles } from './styles';
+import { useAuthStyles } from './styles';
 
 export default function RestrictedAccessScreen({ onSignOut }) {
+  const styles = useAuthStyles();
   return (
     <View style={[styles.screen, { justifyContent: 'center', padding: 24 }]}>
       <View style={styles.card}>

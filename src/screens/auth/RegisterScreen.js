@@ -2,9 +2,12 @@ import { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { registrarCiudadano } from '../../services/registration.service';
 import AuthHeader from './AuthHeader';
-import { colors, styles } from './styles';
+import { useAuthStyles } from './styles';
+import { useTheme } from '../../theme/ThemeProvider';
 
 export default function RegisterScreen({ otpGateway, onRegistered, onLogin }) {
+  const styles = useAuthStyles();
+  const { colors } = useTheme();
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,14 +36,14 @@ export default function RegisterScreen({ otpGateway, onRegistered, onLogin }) {
           <Text accessibilityRole="header" style={styles.title}>Crear cuenta</Text>
           <Text style={styles.subtitle}>Únete a la comunidad INFRASOL</Text>
           <Text style={styles.label}>Nombre completo</Text>
-          <TextInput accessibilityLabel="Nombre completo" style={styles.input} placeholder="Juan Pérez" value={nombre} onChangeText={setNombre} autoCapitalize="words" />
+          <TextInput accessibilityLabel="Nombre completo" style={styles.input} placeholderTextColor={colors.mutedText} placeholder="Juan Pérez" value={nombre} onChangeText={setNombre} autoCapitalize="words" />
           <Text style={styles.label}>Correo electrónico</Text>
-          <TextInput accessibilityLabel="Correo electrónico" style={styles.input} placeholder="correo@ejemplo.com" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" />
+          <TextInput accessibilityLabel="Correo electrónico" style={styles.input} placeholderTextColor={colors.mutedText} placeholder="correo@ejemplo.com" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" />
           <Text style={styles.label}>Contraseña</Text>
-          <TextInput accessibilityLabel="Contraseña" style={styles.input} placeholder="Mínimo 6 caracteres" value={password} onChangeText={setPassword} secureTextEntry autoComplete="new-password" />
+          <TextInput accessibilityLabel="Contraseña" style={styles.input} placeholderTextColor={colors.mutedText} placeholder="Mínimo 6 caracteres" value={password} onChangeText={setPassword} secureTextEntry autoComplete="new-password" />
           {!!error && <View accessibilityRole="alert" style={styles.errorBox}><Text style={styles.errorText}>{error}</Text></View>}
           <TouchableOpacity accessibilityRole="button" accessibilityLabel="Crear cuenta" style={styles.primaryButton} onPress={handleRegister} disabled={loading}>
-            {loading ? <ActivityIndicator color={colors.surface} /> : <Text style={styles.primaryText}>Crear cuenta →</Text>}
+            {loading ? <ActivityIndicator color={colors.onPrimary} /> : <Text style={styles.primaryText}>Crear cuenta →</Text>}
           </TouchableOpacity>
           <TouchableOpacity accessibilityRole="button" accessibilityLabel="Iniciar sesión" style={styles.secondaryButton} onPress={onLogin} disabled={loading}>
             <Text style={styles.secondaryText}>¿Ya tienes cuenta? Inicia sesión</Text>

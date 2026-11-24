@@ -1,7 +1,8 @@
 import { Text, TouchableOpacity } from 'react-native';
-import { styles } from '../auth/styles';
+import { useAuthStyles } from '../auth/styles';
 
 export default function AdminButton({ label, children, onPress, disabled, primary }) {
+  const styles = useAuthStyles();
   return (
     <TouchableOpacity accessibilityRole="button" accessibilityLabel={label}
       accessibilityState={{ disabled: !!disabled }} disabled={disabled}
