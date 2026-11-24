@@ -2,20 +2,12 @@ import { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { iniciarSesion } from '../../services/auth.service';
 import { validarCredenciales } from '../../services/auth.validation';
+import { loginErrors, mensajeErrorAuth } from '../../services/auth.errors';
 import AuthHeader from './AuthHeader';
 import { useAuthStyles } from './styles';
 import { useTheme } from '../../theme/ThemeProvider';
 
-const authErrors = {
-  'auth/invalid-credential': 'Correo o contraseña incorrectos.',
-  'auth/wrong-password': 'Correo o contraseña incorrectos.',
-  'auth/user-not-found': 'Correo o contraseña incorrectos.',
-  'auth/invalid-email': 'Ingresa un correo electrónico válido.',
-  'auth/too-many-requests': 'Demasiados intentos. Intenta más tarde.',
-  'auth/network-request-failed': 'Sin conexión a internet. Intenta de nuevo.',
-};
-
-export default function LoginScreen({ onLogin, onRegister }) {
+export default function LoginScreen({ onLogin, onRegister, onForgotPassword }) {
   const styles = useAuthStyles();
   const { colors } = useTheme();
   const [email, setEmail] = useState('');
@@ -38,7 +30,7 @@ export default function LoginScreen({ onLogin, onRegister }) {
       const user = await iniciarSesion(cleanEmail, password);
       onLogin?.(user);
     } catch (cause) {
-      setError(authErrors[cause?.code] || cause?.message || 'No se pudo iniciar sesión. Intenta de nuevo.');
+      setError(mensajeErrorAuth(cause, loginErrors, cause?.message || 'No se pudo iniciar sesión. Intenta de nuevo.'));
     } finally {
       setLoading(false);
     }
@@ -55,6 +47,9 @@ export default function LoginScreen({ onLogin, onRegister }) {
           <TextInput accessibilityLabel="Correo electrónico" style={styles.input} placeholderTextColor={colors.mutedText} placeholder="correo@ejemplo.com" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" />
           <Text style={styles.label}>Contraseña</Text>
           <TextInput accessibilityLabel="Contraseña" style={styles.input} placeholderTextColor={colors.mutedText} placeholder="Tu contraseña" value={password} onChangeText={setPassword} secureTextEntry autoComplete="current-password" />
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Olvidé mi contraseña" style={styles.linkButton} onPress={onForgotPassword} disabled={loading}>
+            <Text style={styles.linkText}>¿Olvidaste tu contraseña?</Text>
+          </TouchableOpacity>
           {!!error && <View accessibilityRole="alert" style={styles.errorBox}><Text style={styles.errorText}>{error}</Text></View>}
           <TouchableOpacity accessibilityRole="button" accessibilityLabel="Entrar" style={styles.primaryButton} onPress={handleLogin} disabled={loading}>
             {loading ? <ActivityIndicator color={colors.onPrimary} /> : <Text style={styles.primaryText}>Entrar →</Text>}

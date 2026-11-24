@@ -7,6 +7,7 @@ import { puedeAcceder } from '../services/registration.service';
 import { otpGateway } from '../services/otp.gateway';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
+import RecoverPasswordScreen from '../screens/auth/RecoverPasswordScreen';
 import VerificationScreen from '../screens/auth/VerificationScreen';
 import RestrictedAccessScreen from '../screens/auth/RestrictedAccessScreen';
 import StartScreen from '../screens/StartScreen';
@@ -73,7 +74,10 @@ export default function RootNavigator() {
   }
 
   if (!user) {
-    if (authMode === 'login') return <LoginScreen onRegister={() => setAuthMode('register')} />;
+    if (authMode === 'recover') return <RecoverPasswordScreen onBack={() => setAuthMode('login')} />;
+    if (authMode === 'login') {
+      return <LoginScreen onRegister={() => setAuthMode('register')} onForgotPassword={() => setAuthMode('recover')} />;
+    }
     return <RegisterScreen otpGateway={otpGateway} onLogin={() => setAuthMode('login')} />;
   }
   if (!puedeAcceder(user, profile)) {
