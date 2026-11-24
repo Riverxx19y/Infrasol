@@ -1,4 +1,5 @@
 import { useTheme } from '../../theme/ThemeProvider';
+import { cardBase, font, headerStyles, outlineButton, radius, space } from '../../theme/tokens';
 import { useThemedStyles } from '../../theme/useThemedStyles';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useNotificaciones } from '../../hooks/useNotificaciones';
@@ -62,22 +63,20 @@ export default function NotificationsScreen({ uid, onBack }) {
 
 const createStyles = (colors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
-  back: { paddingHorizontal: 18, paddingTop: 48, paddingBottom: 12, backgroundColor: colors.surface },
-  backText: { color: colors.primary, fontSize: 18, fontWeight: '600' },
-  title: { fontSize: 24, fontWeight: '700', color: colors.text, paddingHorizontal: 18, paddingVertical: 12 },
-  body: { color: colors.text },
-  message: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, padding: 24 },
-  list: { padding: 16, paddingBottom: 32, gap: 12 },
-  card: { backgroundColor: colors.surface, borderRadius: 12, borderWidth: 1, borderColor: colors.border, padding: 16, gap: 6 },
-  unread: { borderColor: colors.primary, borderLeftWidth: 4 },
+  ...headerStyles(colors),
+  body: { color: colors.text, fontSize: font.body, textAlign: 'center' },
+  message: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.md, padding: space.xxl },
+  list: { padding: space.lg, paddingTop: space.xs, paddingBottom: space.xxl * 2, gap: space.md },
+  card: { ...cardBase(colors), gap: space.xs + 2 },
+  unread: { borderColor: colors.primary, borderLeftWidth: 5 },
   cardTitle: { fontSize: 16, fontWeight: '700', color: colors.text },
   reference: { color: colors.mutedText },
   description: { color: colors.text, fontWeight: '600' },
   date: { color: colors.mutedText, fontSize: 12 },
   readState: { color: colors.mutedText, fontSize: 12 },
-  readButton: { alignSelf: 'flex-start', marginTop: 6, padding: 8 },
+  readButton: { ...outlineButton(colors), minHeight: 40, paddingVertical: space.sm, alignSelf: 'flex-start', marginTop: space.sm, borderRadius: radius.sm },
   readButtonText: { color: colors.primary, fontWeight: '700' },
-  retry: { padding: 12 },
+  retry: { ...outlineButton(colors), paddingHorizontal: space.xxl },
   retryText: { color: colors.primary, fontWeight: '700' },
-  updateError: { color: colors.danger, paddingHorizontal: 18, paddingBottom: 8 },
+  updateError: { color: colors.danger, backgroundColor: colors.surface, marginHorizontal: space.lg, padding: space.md, borderRadius: radius.sm, borderWidth: 1, borderColor: colors.danger },
 });

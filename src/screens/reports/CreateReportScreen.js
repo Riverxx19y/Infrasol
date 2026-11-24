@@ -1,4 +1,5 @@
 import { useTheme } from '../../theme/ThemeProvider';
+import { font, outlineButton, radius, solidButton, space, topInset } from '../../theme/tokens';
 import { useThemedStyles } from '../../theme/useThemedStyles';
 import { useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -260,31 +261,31 @@ export default function CreateReportScreen({ user, onBack, onCreated }) {
 
 const createStyles = (colors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
-  content: { padding: 24, paddingTop: 52, paddingBottom: 48 },
+  content: { padding: space.xl, paddingTop: topInset, paddingBottom: space.xxl * 2 },
   back: { marginBottom: 18, alignSelf: 'flex-start' },
   backText: { color: colors.primary, fontSize: 16, fontWeight: '600' },
-  title: { color: colors.text, fontSize: 30, fontWeight: '700' },
+  title: { color: colors.text, fontSize: 28, fontWeight: '800' },
   body: { color: colors.text },
   subtitle: { color: colors.mutedText, fontSize: 15, marginTop: 6, marginBottom: 24 },
-  label: { color: colors.text, fontWeight: '700', fontSize: 15, marginTop: 20, marginBottom: 9 },
+  label: { color: colors.text, fontWeight: '700', fontSize: font.body, marginTop: space.xl, marginBottom: space.sm + 1 },
   types: { flexDirection: 'row', flexWrap: 'wrap', gap: 9 },
-  type: { borderColor: colors.border, borderWidth: 1, borderRadius: 12, paddingVertical: 10, paddingHorizontal: 14, backgroundColor: colors.surface },
+  type: { borderColor: colors.border, borderWidth: 1.5, borderRadius: radius.pill, paddingVertical: 9, paddingHorizontal: space.lg, backgroundColor: colors.surface },
   typeSelected: { borderColor: colors.primary, backgroundColor: colors.selected },
   typeText: { color: colors.mutedText, fontWeight: '600' },
   typeTextSelected: { color: colors.primary },
-  description: { color: colors.text, minHeight: 112, padding: 14, backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: 12, fontSize: 15 },
-  actionButton: { backgroundColor: colors.surface, borderColor: colors.primary, borderWidth: 1, borderRadius: 12, padding: 15, alignItems: 'center' },
+  description: { color: colors.text, minHeight: 120, padding: 14, backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1.5, borderRadius: radius.md, fontSize: font.body },
+  actionButton: { ...outlineButton(colors) },
   actionText: { color: colors.primary, fontWeight: '700' },
-  locationBox: { backgroundColor: colors.successSurface, borderRadius: 12, padding: 13, marginTop: 10 },
+  locationBox: { backgroundColor: colors.successSurface, borderRadius: radius.md, padding: 14, marginTop: space.sm + 2 },
   locationText: { color: colors.success, fontWeight: '600' },
   coordinates: { color: colors.mutedText, marginTop: 4 },
-  photoPreview: { width: '100%', height: 200, borderRadius: 12, marginTop: 10 },
+  photoPreview: { width: '100%', height: 210, borderRadius: radius.md, marginTop: space.sm + 2 },
   nearbyItem: { paddingVertical: 12, gap: 8, borderBottomWidth: 1, borderColor: colors.border },
-  errorBox: { backgroundColor: colors.dangerSurface, borderRadius: 10, padding: 12, marginTop: 18 },
+  errorBox: { backgroundColor: colors.dangerSurface, borderRadius: radius.sm, padding: space.md, marginTop: space.lg + 2 },
   errorText: { color: colors.danger },
-  successBox: { backgroundColor: colors.successSurface, borderRadius: 10, padding: 12, marginTop: 18 },
+  successBox: { backgroundColor: colors.successSurface, borderRadius: radius.sm, padding: space.md, marginTop: space.lg + 2 },
   successText: { color: colors.success },
-  submit: { backgroundColor: colors.primary, borderRadius: 12, padding: 16, alignItems: 'center', marginTop: 24 },
+  submit: { ...solidButton(colors), marginTop: space.xxl + space.xs },
   submitDisabled: { opacity: 0.65 },
-  submitText: { color: colors.onPrimary, fontWeight: '700', fontSize: 16 },
+  submitText: { color: colors.onPrimary, fontWeight: '800', fontSize: font.button },
 });
