@@ -1,59 +1,113 @@
-# INFRASOL · Base técnica
+# INFRASOL
 
-Base móvil de Expo SDK 54 para Android e iOS. Sprint 1 incluye registro ciudadano y verificación de correo mediante la API independiente `INFRASOL-BACKEND`.
+Aplicación móvil para que los ciudadanos de Sincelejo reporten deficiencias de la infraestructura vial y de los servicios públicos, las vean en un mapa y sigan su atención. Los administradores gestionan el estado de los reportes y consultan estadísticas generales.
 
-## Probar la aplicación
+Proyecto de la Electiva Profesional en Ingeniería de Software (CECAR), desarrollado con Scrum, TDD e integración continua.
 
-Desde `INFRASOL-SCRUM-NUEVO`, con Node.js 20.19.4 o posterior, npm y Expo Go compatible con SDK 54:
+[![CI](https://github.com/Riverxx19y/Infrasol/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/Riverxx19y/Infrasol/actions/workflows/ci.yml)
+**Versión actual:** [v1.0.0](https://github.com/Riverxx19y/Infrasol/releases/tag/v1.0.0)
 
-```sh
-npm ci
-```
+## Funcionalidades
 
-Antes del primer arranque, crea el entorno local y completa las variables públicas de Firebase y `EXPO_PUBLIC_API_URL`:
+| Sprint | Historia | Funcionalidad |
+| --- | --- | --- |
+| 1 | HU-01 | Registro con correo y contraseña y verificación por código OTP |
+| 1 | HU-02 | Inicio de sesión, persistencia de sesión y acceso por rol |
+| 2 | HU-03 | Reportes con ubicación GPS, descripción y fotografía opcional |
+| 3 | HU-04 | Mapa de reportes activos con marcadores por categoría y clústeres |
+| 3 | HU-05 | Apoyo único a reportes y detección de reportes cercanos (≤ 150 m) |
+| 3 | HU-07 | Historial de reportes propios con estado y paginación |
+| 4 | HU-06 | Notificaciones por cambio de estado con contador de pendientes |
+| 4 | HU-08 | Panel administrativo con estadísticas generales |
+| 4 | HU-09 | Cambio de estado de reportes por el administrador |
+| 5 | HU-10 | Modo oscuro con preferencia persistente |
+| 5 | HU-11 | Recuperación de contraseña por enlace de Firebase Authentication |
+
+## Arquitectura
+
+El sistema tiene dos repositorios:
+
+- **Esta aplicación** — React Native 0.81 con Expo SDK 54, Firebase Authentication y Cloud Firestore. Lee y escribe en Firestore con las reglas de `firestore.rules`.
+- **[INFRASOL-BACKEND](https://github.com/Riverxx19y/INFRASOL-BACKEND)** — API Express 5 con Firebase Admin para las operaciones que no deben hacerse desde el cliente: verificación OTP (HU-01), subida de imágenes a ImgBB (HU-03), apoyos (HU-05), cambio de estado y estadísticas (HU-08 y HU-09).
+
+La aplicación se identifica ante el backend con el ID token de Firebase de la sesión. Las claves privadas (Firebase Admin, EmailJS, ImgBB y el secreto OTP) viven solo en el entorno del backend.
+
+## Requisitos
+
+- Node.js 22 y npm 10
+- Expo Go compatible con SDK 54, o un emulador de Android
+- El backend en ejecución para registro, imágenes, apoyos y administración
+- Para las pruebas de reglas: Java 21 y Firebase CLI (`npm install -g firebase-tools`)
+
+## Puesta en marcha
 
 ```powershell
+npm ci
 Copy-Item .env.example .env
 npm start
 ```
 
-Escanea el QR desde un teléfono en la misma red. También puedes ejecutar `npm run android` con un emulador Android disponible o `npm run ios` con un simulador en macOS. Para revisar la configuración y la compatibilidad de dependencias, ejecuta `npx expo config --type public` y `npx expo install --check`.
+Completa el `.env` con la configuración web de Firebase y la URL del backend:
 
-En la verificación de la base de Sprint 1, Expo validó las dependencias y Metro generó correctamente los bundles Hermes para Android e iOS con la inicialización de Firebase incluida.
-
-## Infraestructura creada
-
-| Archivo | Función |
+| Variable | Uso |
 | --- | --- |
-| `package.json` y `package-lock.json` | Comandos, versiones directas y resolución reproducible. |
-| `app.json` | Nombre, identificador de Expo, versión y plataformas. |
-| `index.js` | Punto de entrada que registra `App` con `registerRootComponent`. |
-| `App.js` | Raíz de la aplicación. |
-| `src/navigation/RootNavigator.js` | Selección de registro, verificación o pantalla inicial según la sesión y `emailVerificado`. |
-| `src/screens/StartScreen.js` | Pantalla de comprobación independiente, con componentes de React Native. |
-| `config/firebase.js` | Validación del entorno e inicialización de Authentication con persistencia y Firestore. |
-| `.env.example` | Nombres de las variables públicas requeridas, sin valores del proyecto. |
-| `.gitignore` | Exclusiones para archivos generados, datos de entorno y archivos sensibles. |
-| `README.md` | Arranque, configuración y límites técnicos. |
+| `EXPO_PUBLIC_FIREBASE_*` | Configuración web del proyecto de Firebase |
+| `EXPO_PUBLIC_API_URL` | Dirección base del backend, por ejemplo `http://<IP-LAN-del-equipo>:3000` |
 
-Dependencias directas: Expo SDK 54, Firebase 11.10.0 y AsyncStorage 2.2.0. La navegación actual selecciona una de tres pantallas sin instalar una biblioteca adicional. Las historias posteriores incorporarán sus propias funcionalidades.
+En un teléfono físico, `localhost` apunta al propio teléfono: usa la IP de tu equipo en la red local y arranca el backend con `HOST=0.0.0.0`. Inicia primero el backend y después reinicia Expo para que lea el `.env`.
 
-## HU-01 · Configuración OTP
+Escanea el QR con Expo Go o ejecuta `npm run android` con un emulador disponible.
 
-`registration.service.js` crea la cuenta en Firebase Authentication y el perfil `usuarios/{uid}` con `emailVerificado: false`. `RootNavigator` conecta las pantallas con `otp.gateway.js`, que obtiene el ID token vigente y llama a `POST /api/otp/solicitar`, `/verificar` y `/reenviar`. El backend genera, almacena, envía y verifica el código; el cliente solo presenta el formulario y el resultado. La navegación permanece en verificación hasta que Firestore indique `emailVerificado: true`.
+## Pruebas
 
-`EXPO_PUBLIC_API_URL` contiene solo la dirección base de la API. La dirección `192.0.2.10` de `.env.example` es ilustrativa y debe reemplazarse en el `.env` local. Para un teléfono físico en la misma red, usa `http://<IP-LAN-del-equipo>:3000` (o el `PORT` configurado en Express); `localhost` en el teléfono apunta al propio teléfono. El backend debe escuchar en una interfaz accesible, como `HOST=0.0.0.0`, y el teléfono debe poder alcanzar ese puerto. Inicia primero el backend y luego reinicia Expo para que lea el `.env`. Para un backend desplegado, configura la URL pública HTTPS en el entorno de compilación de Expo. La configuración de Firebase Admin y la clave privada de EmailJS permanecen exclusivamente en el entorno del backend.
+| Comando | Qué ejecuta |
+| --- | --- |
+| `npm test` | Pruebas unitarias, de componentes y de navegación con Jest |
+| `npm run test:ci` | Lo mismo, de forma secuencial y con cobertura (igual que el CI) |
+| `npm run test:rules` | Pruebas de `firestore.rules` contra el emulador de Firestore |
 
-Si Firebase crea la cuenta y falla el envío, la sesión queda pendiente y la pantalla de verificación permite **Reenviar código** sin registrar otra cuenta. La sesión persiste al cerrar y reabrir la aplicación. Si el usuario cierra sesión, HU-02 deberá aportar el inicio de sesión para recuperar esa cuenta. Un error de conexión o una respuesta HTTP fallida se muestra en pantalla; no se anuncia un correo enviado sin confirmación de la API.
+Las pruebas no usan servicios reales: Firebase, el backend, la ubicación y la cámara se sustituyen por dobles de prueba o por el emulador. Las pruebas del backend están en su propio repositorio (`npm test` y `npm run test:integration`).
 
-`firestore.rules` permite al ciudadano crear y leer su perfil no verificado, pero impide cualquier actualización o eliminación del perfil desde el cliente, incluidos cambios de `emailVerificado`, UID o rol. También bloquea el acceso cliente a los retos OTP. Los cambios futuros del perfil requerirán ampliar las reglas de forma controlada, limitando campos y valores permitidos. Son reglas completas para esta base mínima: antes de aplicarlas a un proyecto compartido deben integrarse con sus reglas actuales. No se han desplegado reglas ni servicios.
+## Integración continua
 
-Ejecuta `npm run test:ci` para las pruebas del cliente, `npm run test:rules` para las reglas en el emulador local (requiere Firebase CLI) y `npx expo export --platform android --platform ios` para comprobar los bundles. Las pruebas del backend y su configuración están documentadas en el directorio hermano `INFRASOL-BACKEND`.
+El workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) se ejecuta en cada Pull Request y en cada push a `develop` y `main`:
 
-## HU-03 · Fotografías opcionales
+1. Instalación limpia con `npm ci` (Node 22, npm 10.9.4).
+2. Jest con cobertura (`npm run test:ci`).
+3. Pruebas de reglas con el emulador de Firestore (`npm run test:rules`).
+4. Publicación del informe de cobertura como artefacto.
 
-El ciudadano puede adjuntar una fotografía desde cámara o galería. Si cancela la selección, el reporte se crea sin imagen. Si falla la subida, puede confirmar **Enviar sin foto** sin perder los campos del formulario. Una subida exitosa proporciona `fotoUrl` a `crearReporte`; las reglas actuales de Firestore ya aceptan ese campo opcional.
+Un Pull Request solo se fusiona con el CI en verde y la aprobación de otro integrante.
 
-La aplicación envía el contenido base64 de la imagen a `POST /api/images/upload` en `INFRASOL-BACKEND`, usando `EXPO_PUBLIC_API_URL` y el Firebase ID Token de la sesión. El backend comprueba que la cuenta sea un ciudadano verificado, valida JPEG, PNG o WebP, y sube a ImgBB con `IMGBB_API_KEY` guardada exclusivamente en su entorno. La aplicación acepta `fotoUrl` solamente si es una URL HTTPS válida de `i.ibb.co`; nunca necesita una clave ImgBB. Las fotos de más de 5 MiB se rechazan antes de enviarse y los errores HTTP 413 indican que debe elegirse una imagen más pequeña. El backend limita el cuerpo HTTP a 7 MiB.
+## Flujo de trabajo
 
-Para una prueba real, configura la URL accesible del backend en el `.env` local de Expo, configura Firebase Admin e `IMGBB_API_KEY` en el entorno privado del backend, e inicia ambos servicios. La cuenta de prueba debe tener un perfil `usuarios/{uid}` con `rol: 'ciudadano'` y `emailVerificado: true`. En un teléfono físico comprueba los permisos de cámara y galería, la vista previa, la subida y el envío sin fotografía cuando falle la conexión. Las pruebas automatizadas simulan el backend y no realizan subidas reales.
+- **Ramas:** `main` (versiones estables), `develop` (integración) y una rama por historia, `feature/HU-XX-descripcion`, creada desde `develop`.
+- **TDD:** cada historia tiene tres commits separados, uno por fase:
+  - `test: agrega pruebas RED de … HU-XX`
+  - `feat: implementa … HU-XX`
+  - `refactor: … HU-XX`
+- **Integración:** Pull Request hacia `develop` con revisión cruzada; las versiones se publican en `main` y se etiquetan como releases (`v1.0.0`).
+
+## Estructura
+
+```
+config/            Inicialización de Firebase y pruebas de índices
+src/components/    Componentes del mapa y de los reportes
+src/hooks/         Lógica de estado compartida (notificaciones, historial, administración)
+src/navigation/    RootNavigator: pantalla según sesión, rol y verificación
+src/screens/       Pantallas de autenticación, inicio, reportes, mapa, notificaciones, perfil y administración
+src/services/      Acceso a Firebase y al backend, validaciones y mensajes de error
+src/theme/         Paletas claro/oscuro, ThemeProvider y tokens de diseño
+src/utils/         Geometría del mapa, formato y estados de los reportes
+tests/             Pruebas de reglas de Firestore (emulador)
+firestore.rules    Reglas de seguridad de Firestore
+firestore.indexes.json  Índices compuestos de Firestore
+```
+
+## Equipo
+
+| Integrante | Historias |
+| --- | --- |
+| Oscar David Rivera Meza | HU-02, HU-03 (fotografías), HU-06, HU-07 y HU-11 |
+| Alex David González Monterroza | HU-01, HU-05, HU-09 y HU-10 |
+| Camilo Andrés Rodríguez Arrieta | HU-03, HU-04 y HU-08 |
