@@ -14,6 +14,7 @@ import AdminScreen from '../screens/admin/AdminScreen';
 import CreateReportScreen from '../screens/reports/CreateReportScreen';
 import MapScreen from '../screens/map/MapScreen';
 import MyReportsScreen from '../screens/reports/MyReportsScreen';
+import NotificationsScreen from '../screens/notifications/NotificationsScreen';
 
 export default function RootNavigator() {
   const [user, setUser] = useState(undefined);
@@ -22,6 +23,7 @@ export default function RootNavigator() {
   const [showCreateReport, setShowCreateReport] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   async function handleSignOut() {
     await signOut(auth);
@@ -39,6 +41,7 @@ export default function RootNavigator() {
       setShowCreateReport(false);
       setShowMap(false);
       setShowHistory(false);
+      setShowNotifications(false);
       setProfile(currentUser ? undefined : null);
       if (currentUser) {
         stopProfile = onSnapshot(
@@ -76,12 +79,15 @@ export default function RootNavigator() {
     if (showCreateReport) return <CreateReportScreen user={user} onBack={() => setShowCreateReport(false)} />;
     if (showMap) return <MapScreen onBack={() => setShowMap(false)} />;
     if (showHistory) return <MyReportsScreen onBack={() => setShowHistory(false)} />;
+    if (showNotifications) return <NotificationsScreen uid={user.uid} onBack={() => setShowNotifications(false)} />;
     return (
       <StartScreen
+        user={user}
         onSignOut={handleSignOut}
         onCreateReport={() => setShowCreateReport(true)}
         onOpenMap={() => setShowMap(true)}
         onOpenHistory={() => setShowHistory(true)}
+        onOpenNotifications={() => setShowNotifications(true)}
       />
     );
   }
