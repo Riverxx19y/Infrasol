@@ -1,21 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { reenviarCodigo, verificarCodigo } from '../../services/registration.service';
+import { useCooldown } from '../../hooks/useCooldown';
 import { colors, styles } from './styles';
 
 const emptyDigits = () => Array(6).fill('');
+const RESEND_WAIT_MS = 60_000;
 
 export default function VerificationScreen({ user, otpGateway, onUseAnotherAccount }) {
   const [digits, setDigits] = useState(emptyDigits);
   const [loading, setLoading] = useState(false);
-  const [cooldownUntil, setCooldownUntil] = useState(0);
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    if (!cooldownUntil) return undefined;
-    const timer = setTimeout(() => setCooldownUntil(0), Math.max(0, cooldownUntil - Date.now()));
-    return () => clearTimeout(timer);
-  }, [cooldownUntil]);
+  const cooldown = useCooldown(RESEND_WAIT_MS);
 
   function updateDigit(index, text) {
     const digit = text.replace(/\D/g, '').slice(-1);
@@ -38,13 +34,13 @@ export default function VerificationScreen({ user, otpGateway, onUseAnotherAccou
   }
 
   async function handleResend() {
-    if (loading || Date.now() < cooldownUntil) return;
+    if (loading || cooldown.active) return;
     setLoading(true);
     setError('');
     try {
       await reenviarCodigo(user.uid, otpGateway);
       setDigits(emptyDigits());
-      setCooldownUntil(Date.now() + 60_000);
+      cooldown.start();
     } catch (cause) {
       setError(cause.message || 'No se pudo reenviar el código.');
     } finally {
@@ -52,7 +48,7 @@ export default function VerificationScreen({ user, otpGateway, onUseAnotherAccou
     }
   }
 
-  const resendCoolingDown = Date.now() < cooldownUntil;
+  const resendCoolingDown = cooldown.active;
 
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.background }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
