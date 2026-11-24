@@ -37,4 +37,8 @@ export const styles = StyleSheet.create({
   digit: { width: 42, height: 56, borderWidth: 2, borderColor: colors.border, borderRadius: 12, backgroundColor: colors.background, textAlign: 'center', color: colors.dark, fontSize: 23, fontWeight: '800' },
   digitFilled: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
   emoji: { fontSize: 52, textAlign: 'center', marginBottom: 14 },
+  successBox: { backgroundColor: colors.primaryLight, borderRadius: 12, padding: 12, marginTop: 16 },
+  successText: { color: colors.primary, fontSize: 13, textAlign: 'center' },
+  linkButton: { alignSelf: 'flex-end', paddingVertical: 8, marginTop: 4 },
+  linkText: { color: colors.primary, fontWeight: '700', fontSize: 13 },
 });

@@ -14,7 +14,7 @@ const authErrors = {
   'auth/network-request-failed': 'Sin conexión a internet. Intenta de nuevo.',
 };
 
-export default function LoginScreen({ onLogin, onRegister }) {
+export default function LoginScreen({ onLogin, onRegister, onForgotPassword }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -52,6 +52,9 @@ export default function LoginScreen({ onLogin, onRegister }) {
           <TextInput accessibilityLabel="Correo electrónico" style={styles.input} placeholder="correo@ejemplo.com" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" />
           <Text style={styles.label}>Contraseña</Text>
           <TextInput accessibilityLabel="Contraseña" style={styles.input} placeholder="Tu contraseña" value={password} onChangeText={setPassword} secureTextEntry autoComplete="current-password" />
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Olvidé mi contraseña" style={styles.linkButton} onPress={onForgotPassword} disabled={loading}>
+            <Text style={styles.linkText}>¿Olvidaste tu contraseña?</Text>
+          </TouchableOpacity>
           {!!error && <View accessibilityRole="alert" style={styles.errorBox}><Text style={styles.errorText}>{error}</Text></View>}
           <TouchableOpacity accessibilityRole="button" accessibilityLabel="Entrar" style={styles.primaryButton} onPress={handleLogin} disabled={loading}>
             {loading ? <ActivityIndicator color={colors.surface} /> : <Text style={styles.primaryText}>Entrar →</Text>}
