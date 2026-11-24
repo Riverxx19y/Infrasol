@@ -1,7 +1,8 @@
 import { Image, Text, View } from 'react-native';
-import { styles } from './styles';
+import { useAuthStyles } from './styles';
 
 export default function AuthHeader() {
+  const styles = useAuthStyles();
   return (
     <View style={styles.header}>
       <View style={styles.logoWrap}>

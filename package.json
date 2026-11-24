@@ -29,6 +29,7 @@
   },
   "jest": {
     "preset": "jest-expo",
+    "setupFilesAfterEnv": ["<rootDir>/config/jest.setup.js"],
     "testPathIgnorePatterns": [
       "/node_modules/",
       "/tests/"
