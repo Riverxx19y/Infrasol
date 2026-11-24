@@ -1,4 +1,5 @@
 import { useThemedStyles } from '../../theme/useThemedStyles';
+import { cardBase, font, outlineButton, space } from '../../theme/tokens';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import EstadoBadge from './EstadoBadge';
 import { formatearFecha, lugarDeReporte } from '../../utils/reportFormat';
@@ -21,11 +22,11 @@ export default function ReportDetail({ reporte, onClose }) {
 }
 
 const createStyles = (colors) => StyleSheet.create({
-  detail: { margin: 16, padding: 16, backgroundColor: colors.surface, borderRadius: 12, gap: 8 },
-  title: { fontSize: 18, fontWeight: '700', color: colors.text },
-  description: { color: colors.text, fontSize: 16 },
+  detail: { ...cardBase(colors), margin: space.lg, marginTop: space.xs, padding: space.xl, gap: space.sm + 2 },
+  title: { fontSize: 20, fontWeight: '800', color: colors.text },
+  description: { color: colors.text, fontSize: font.body + 1, lineHeight: 23 },
   place: { color: colors.mutedText },
   date: { color: colors.mutedText },
-  button: { marginTop: 8, borderWidth: 1, borderColor: colors.primary, borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
+  button: { ...outlineButton(colors), marginTop: space.md },
   buttonText: { color: colors.primary, fontWeight: '700' },
 });

@@ -1,4 +1,5 @@
 import { useTheme } from '../../theme/ThemeProvider';
+import { cardBase, font, headerStyles, outlineButton, space } from '../../theme/tokens';
 import { useThemedStyles } from '../../theme/useThemedStyles';
 import { useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -61,13 +62,11 @@ export default function MyReportsScreen({ onBack }) {
 
 const createStyles = (colors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
-  back: { paddingHorizontal: 18, paddingTop: 48, paddingBottom: 12, backgroundColor: colors.surface },
-  backText: { color: colors.primary, fontSize: 18, fontWeight: '600' },
-  title: { fontSize: 24, fontWeight: '700', color: colors.text, paddingHorizontal: 18, paddingVertical: 12 },
-  body: { color: colors.text },
-  message: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, padding: 24 },
-  list: { paddingHorizontal: 16, paddingBottom: 24, gap: 12 },
+  ...headerStyles(colors),
+  body: { color: colors.text, fontSize: font.body, textAlign: 'center' },
+  message: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.md, padding: space.xxl },
+  list: { paddingHorizontal: space.lg, paddingTop: space.xs, paddingBottom: space.xxl * 2, gap: space.md },
   error: { color: colors.danger, textAlign: 'center' },
-  loadMore: { marginTop: 8, borderWidth: 1, borderColor: colors.primary, borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
+  loadMore: { ...outlineButton(colors), marginTop: space.sm },
   loadMoreText: { color: colors.primary, fontWeight: '700' },
 });

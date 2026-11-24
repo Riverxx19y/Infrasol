@@ -1,4 +1,5 @@
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { cardBase, font, space } from '../../theme/tokens';
 import { useAuthStyles } from '../auth/styles';
 import { useTheme } from '../../theme/ThemeProvider';
 import { useThemedStyles } from '../../theme/useThemedStyles';
@@ -49,9 +50,9 @@ export default function ResumenAdmin({ resumen, cargando, error, consultar }) {
 }
 
 const createStyles = (colors) => StyleSheet.create({
-  card: { backgroundColor: colors.surface, padding: 16, borderRadius: 14, gap: 6 },
-  text: { color: colors.text },
-  heading: { color: colors.text, fontSize: 16, fontWeight: '700' },
-  destacado: { paddingTop: 8, gap: 3 },
+  card: { ...cardBase(colors), gap: space.xs + 2 },
+  text: { color: colors.text, fontSize: font.label },
+  heading: { color: colors.text, fontSize: 17, fontWeight: '800', marginTop: space.xs },
+  destacado: { marginTop: space.sm, paddingTop: space.sm, gap: 3, borderTopWidth: 1, borderColor: colors.border },
   loading: { flexDirection: 'row', alignItems: 'center', gap: 8 },
 });

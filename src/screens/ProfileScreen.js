@@ -1,4 +1,5 @@
 import { StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { cardBase, font, space, topInset } from '../theme/tokens';
 import { useTheme } from '../theme/ThemeProvider';
 import { useThemedStyles } from '../theme/useThemedStyles';
 
@@ -30,10 +31,10 @@ export default function ProfileScreen({ onBack }) {
 }
 
 const createStyles = (colors) => StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.background, padding: 24, paddingTop: 48, gap: 16 },
-  title: { color: colors.text, fontSize: 26, fontWeight: '700' },
-  row: { backgroundColor: colors.surface, borderRadius: 12, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  label: { color: colors.text, fontSize: 16 },
-  link: { color: colors.primary, fontWeight: '700' },
+  screen: { flex: 1, backgroundColor: colors.background, padding: space.xl, paddingTop: topInset, gap: space.lg },
+  title: { color: colors.text, fontSize: font.title + 2, fontWeight: '800' },
+  row: { ...cardBase(colors), flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  label: { color: colors.text, fontSize: font.button, fontWeight: '600' },
+  link: { color: colors.primary, fontWeight: '700', fontSize: font.button, paddingVertical: space.xs },
   error: { color: colors.danger },
 });
