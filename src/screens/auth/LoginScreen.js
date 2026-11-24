@@ -2,17 +2,9 @@ import { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { iniciarSesion } from '../../services/auth.service';
 import { validarCredenciales } from '../../services/auth.validation';
+import { loginErrors, mensajeErrorAuth } from '../../services/auth.errors';
 import AuthHeader from './AuthHeader';
 import { colors, styles } from './styles';
-
-const authErrors = {
-  'auth/invalid-credential': 'Correo o contraseña incorrectos.',
-  'auth/wrong-password': 'Correo o contraseña incorrectos.',
-  'auth/user-not-found': 'Correo o contraseña incorrectos.',
-  'auth/invalid-email': 'Ingresa un correo electrónico válido.',
-  'auth/too-many-requests': 'Demasiados intentos. Intenta más tarde.',
-  'auth/network-request-failed': 'Sin conexión a internet. Intenta de nuevo.',
-};
 
 export default function LoginScreen({ onLogin, onRegister, onForgotPassword }) {
   const [email, setEmail] = useState('');
@@ -35,7 +27,7 @@ export default function LoginScreen({ onLogin, onRegister, onForgotPassword }) {
       const user = await iniciarSesion(cleanEmail, password);
       onLogin?.(user);
     } catch (cause) {
-      setError(authErrors[cause?.code] || cause?.message || 'No se pudo iniciar sesión. Intenta de nuevo.');
+      setError(mensajeErrorAuth(cause, loginErrors, cause?.message || 'No se pudo iniciar sesión. Intenta de nuevo.'));
     } finally {
       setLoading(false);
     }
