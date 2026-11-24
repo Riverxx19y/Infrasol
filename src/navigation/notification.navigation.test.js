@@ -14,7 +14,7 @@ jest.mock('../screens/StartScreen', () => 'StartScreen');
 jest.mock('../screens/reports/CreateReportScreen', () => 'CreateReportScreen');
 jest.mock('../screens/map/MapScreen', () => 'MapScreen');
 jest.mock('../screens/reports/MyReportsScreen', () => 'MyReportsScreen');
-jest.mock('../screens/notifications/NotificationsScreen', () => 'NotificationsScreen', { virtual: true });
+jest.mock('../screens/notifications/NotificationsScreen', () => 'NotificationsScreen');
 
 const RootNavigator = require('./RootNavigator').default;
 global.IS_REACT_ACT_ENVIRONMENT = true;

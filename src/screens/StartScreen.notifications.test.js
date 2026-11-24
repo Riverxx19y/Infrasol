@@ -2,7 +2,7 @@ import React from 'react';
 import { act, create } from 'react-test-renderer';
 import { Text, TouchableOpacity } from 'react-native';
 
-jest.mock('../hooks/useNotificaciones', () => ({ useNotificaciones: jest.fn() }), { virtual: true });
+jest.mock('../hooks/useNotificaciones', () => ({ useNotificaciones: jest.fn() }));
 const { useNotificaciones } = require('../hooks/useNotificaciones');
 const StartScreen = require('./StartScreen').default;
 global.IS_REACT_ACT_ENVIRONMENT = true;

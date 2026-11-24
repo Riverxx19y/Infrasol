@@ -83,16 +83,14 @@ for (const uid of ['unverified', 'admin']) {
 test('propietario marca leida: true sin cambiar otro campo', async () => {
   const db = client('owner');
   await assertSucceeds(updateDoc(reference(db, 'state'), { leida: true }));
-  const snapshot = await environment.withSecurityRulesDisabled((context) =>
-    getDoc(reference(context.firestore(), 'state')));
+  const snapshot = await getDoc(reference(db, 'state'));
   assert.deepEqual(snapshot.data(), { ...stateNotice, leida: true });
 });
 
 test('documento histórico sin leida puede marcarse como leído', async () => {
   const db = client('owner');
   await assertSucceeds(updateDoc(reference(db, 'support'), { leida: true }));
-  const snapshot = await environment.withSecurityRulesDisabled((context) =>
-    getDoc(reference(context.firestore(), 'support')));
+  const snapshot = await getDoc(reference(db, 'support'));
   assert.deepEqual(snapshot.data(), { ...supportNotice, leida: true });
 });
 
